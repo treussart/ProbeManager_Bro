@@ -1,5 +1,5 @@
 from django.db import models
-from home.ansible_tasks import execute
+from home.ssh import execute
 from home.models import Probe, ProbeConfiguration
 from rules.models import RuleSet, Rule
 import logging
@@ -174,7 +174,7 @@ class RuleSetBro(RuleSet):
 
 class Bro(Probe):
     """
-    Stores an instance of Bro IDS software. Configuration and Ansible settings.
+    Stores an instance of Bro IDS software. Configuration settings.
     """
     rulesets = models.ManyToManyField(RuleSetBro, blank=True)
     configuration = models.ForeignKey(ConfBro)
