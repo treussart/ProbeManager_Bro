@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, ConfBro
 
 admin.site.register(Bro)

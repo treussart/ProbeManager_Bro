@@ -1,6 +1,5 @@
 from bro.api import views
 
-
 urls_to_register = [
     (r'bro/conf', views.ConfBroViewSet),
     (r'bro/bro', views.BroViewSet),

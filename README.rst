@@ -1,4 +1,3 @@
-
 Presentation
 ~~~~~~~~~~~~
 
@@ -11,14 +10,14 @@ Models
 ^^^^^^
 
 .. automodule:: bro.models
-   :members:
+:members:
 
 Views
 ^^^^^
 
 .. automodule:: bro.views
-    :members:
-    :undoc-members:
-    :special-members:
-    :inherited-members:
-    :show-inheritance:
+:members:
+        :undoc-members:
+        :special-members:
+        :inherited-members:
+        :show-inheritance:

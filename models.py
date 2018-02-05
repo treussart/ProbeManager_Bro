@@ -1,15 +1,16 @@
-from django.db import models
-from home.ssh import execute
-from home.models import Probe, ProbeConfiguration
-from rules.models import RuleSet, Rule
+import glob
 import logging
 import os
-import glob
 import subprocess
-import select2.fields
-from django.db.models import Q
-from django.conf import settings
 
+import select2.fields
+from django.conf import settings
+from django.db import models
+from django.db.models import Q
+
+from home.models import Probe, ProbeConfiguration
+from home.ssh import execute
+from rules.models import RuleSet, Rule
 
 logger = logging.getLogger(__name__)
 
@@ -201,26 +202,37 @@ class Bro(Probe):
 
     def install(self):
         path = "/opt"
-        list_package = ["wget", "curl", "ca-certificates", "build-essential", "tcpdump", "cmake", "make", "gcc", "g++", "flex", "bison", "libpcap-dev", "python-dev", "swig", "zlib1g-dev", "tshark", "libssl1.0-dev", "libgeoip-dev", "git"]
+        list_package = ["wget", "curl", "ca-certificates", "build-essential", "tcpdump", "cmake", "make", "gcc", "g++",
+                        "flex", "bison", "libpcap-dev", "python-dev", "swig", "zlib1g-dev", "tshark", "libssl1.0-dev",
+                        "libgeoip-dev", "git"]
         list_install = list()
         for package in list_package:
-            list_install.append(dict(name="apt_install", action=dict(module='apt', name=package, state='present', update_cache='yes')))
+            list_install.append(
+                dict(name="apt_install", action=dict(module='apt', name=package, state='present', update_cache='yes')))
         tasks = [
             dict(name="apt_install", action=dict(module='shell', args='apt install python3-apt')),
         ]
         tasks = tasks + list_install
         list_action = [
-            dict(name="wget", action=dict(module='shell', chdir=path, args='wget https://www.bro.org/downloads/bro-2.5.2.tar.gz')),
+            dict(name="wget",
+                 action=dict(module='shell', chdir=path, args='wget https://www.bro.org/downloads/bro-2.5.2.tar.gz')),
             dict(name="tar_extract", action=dict(module='shell', chdir=path, args='tar xvf bro-2.5.2.tar.gz')),
             dict(name="configure", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='./configure')),
             dict(name="make", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='make')),
             dict(name="make_install", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='make install')),
-            dict(name="export_PATH", action=dict(module='shell', chdir=path, args='export PATH=/usr/local/bro/bin:$PATH')),
-            dict(name="export LD_LIBRARY", action=dict(module='shell', chdir=path, args='export LD_LIBRARY_PATH=/usr/local/bro/lib/')),
-            dict(name="git_af_packet-plugin", action=dict(module='shell', chdir=path, args='git clone https://github.com/J-Gras/bro-af_packet-plugin.git')),
-            dict(name="af_packet-plugin_configure", action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='./configure')),
-            dict(name="af_packet-plugin_make", action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make')),
-            dict(name="af_packet-plugin_make_install", action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make install')),
+            dict(name="export_PATH",
+                 action=dict(module='shell', chdir=path, args='export PATH=/usr/local/bro/bin:$PATH')),
+            dict(name="export LD_LIBRARY",
+                 action=dict(module='shell', chdir=path, args='export LD_LIBRARY_PATH=/usr/local/bro/lib/')),
+            dict(name="git_af_packet-plugin", action=dict(module='shell', chdir=path,
+                                                          args='git clone https://github.com/J-Gras' +
+                                                               '/bro-af_packet-plugin.git')),
+            dict(name="af_packet-plugin_configure",
+                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='./configure')),
+            dict(name="af_packet-plugin_make",
+                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make')),
+            dict(name="af_packet-plugin_make_install",
+                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make install')),
         ]
         tasks = tasks + list_action
         return execute(self, tasks)
@@ -294,14 +306,16 @@ class Bro(Probe):
                     f = open(tmpdir + script.name, 'w')
                     f.write(script.rule_full)
                     f.close()
-                    scripts_to_deploy.append(dict(name="deploy_rules", action=dict(module='copy', src=tmpdir + script.name,
-                                                  dest=self.configuration.conf_script_directory.rstrip('/') + '/' + script.name,
-                                                  owner='root', group='root', mode='0600')))
+                    scripts_to_deploy.append(
+                        dict(name="deploy_rules", action=dict(module='copy', src=tmpdir + script.name,
+                                                              dest=self.configuration.conf_script_directory.rstrip(
+                                                                  '/') + '/' + script.name,
+                                                              owner='root', group='root', mode='0600')))
 
         tasks = [
             dict(name="copy", action=dict(module='copy', src=tmpdir + 'temp.rules',
-                 dest=self.configuration.conf_rules_directory.rstrip('/') + '/deployed.rules',
-                 owner='root', group='root', mode='0600')
+                                          dest=self.configuration.conf_rules_directory.rstrip('/') + '/deployed.rules',
+                                          owner='root', group='root', mode='0600')
                  ),
         ]
         tasks += scripts_to_deploy
@@ -321,7 +335,9 @@ class Bro(Probe):
         f.write(value)
         f.close()
         tasks = [
-            dict(name="deploy_conf", action=dict(module='copy', src=os.path.abspath(tmpdir + 'temp.conf'), dest=self.configuration.conf_file, owner='root', group='root', mode='0600')),
+            dict(name="deploy_conf", action=dict(module='copy', src=os.path.abspath(tmpdir + 'temp.conf'),
+                                                 dest=self.configuration.conf_file, owner='root', group='root',
+                                                 mode='0600')),
         ]
         response = execute(self.server, tasks)
         if os.path.isfile(tmpdir + 'temp.conf'):
@@ -345,6 +361,7 @@ class PcapTestSuricata(models.Model):
                                           )
     probe = models.ForeignKey(Bro)
     pcap_success = models.FileField(name='pcap_success', upload_to='tmp/pcap/', blank=True)
+
     # pcap_fail = models.FileField(name='pcap_fail', upload_to=tmpdir, blank=True)
 
     def __str__(self):

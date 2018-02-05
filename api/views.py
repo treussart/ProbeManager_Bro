@@ -1,7 +1,9 @@
 from rest_framework import viewsets
-from bro.api.serializers import ConfBroSerializer, BroSerializer, SignatureBroSerializer, ScriptBroSerializer, RuleSetBroSerializer
-from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+
+from bro.api.serializers import ConfBroSerializer, BroSerializer, SignatureBroSerializer, ScriptBroSerializer, \
+    RuleSetBroSerializer
+from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
 
 
 class ConfBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):

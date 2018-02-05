@@ -1,10 +1,11 @@
-from django.shortcuts import render
-from django.http import HttpResponseNotFound
-from bro.models import Bro
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 import logging
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseNotFound
+from django.shortcuts import render
+
+from bro.models import Bro
 
 logger = logging.getLogger(__name__)
 

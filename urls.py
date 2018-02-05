@@ -1,9 +1,9 @@
 from django.conf.urls import url
-from home.views import probe_index, start, stop, restart, reload, status, install, update, deploy_conf, deploy_rules, get_progress
 
+from home.views import probe_index, start, stop, restart, reload, status, install, update, deploy_conf, deploy_rules, \
+    get_progress
 
 app_name = 'bro'
-
 
 urlpatterns = [
     url(r'^(?P<id>\d+)$', probe_index, name='probe_index'),

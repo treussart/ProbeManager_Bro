@@ -1,5 +1,6 @@
-from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
 from rest_framework import serializers
+
+from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
 
 
 class ConfBroSerializer(serializers.ModelSerializer):
