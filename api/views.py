@@ -1,17 +1,17 @@
 from rest_framework import viewsets
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 
-from bro.api.serializers import ConfBroSerializer, BroSerializer, SignatureBroSerializer, ScriptBroSerializer, \
+from bro.api.serializers import ConfigurationSerializer, BroSerializer, SignatureBroSerializer, ScriptBroSerializer, \
     RuleSetBroSerializer
-from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
+from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro
 
 
-class ConfBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+class ConfigurationViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
-    queryset = ConfBro.objects.all()
-    serializer_class = ConfBroSerializer
+    queryset = Configuration.objects.all()
+    serializer_class = ConfigurationSerializer
 
 
 class BroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):

@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from bro.models import ConfBro, Bro, SignatureBro, ScriptBro, RuleSetBro
+from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro
 
 
-class ConfBroSerializer(serializers.ModelSerializer):
+class ConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ConfBro
+        model = Configuration
         fields = "__all__"
 
 

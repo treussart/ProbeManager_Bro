@@ -2,42 +2,45 @@ import glob
 import logging
 import os
 import subprocess
+from collections import OrderedDict
 
 import select2.fields
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
-from home.models import Probe, ProbeConfiguration
-from home.ssh import execute
+from core.models import Probe, ProbeConfiguration
+from core.ssh import execute
 from rules.models import RuleSet, Rule
 
 logger = logging.getLogger(__name__)
 
 
-class ConfBro(ProbeConfiguration):
+class Configuration(ProbeConfiguration):
     """
     Configuration for Bro IDS, Allows you to reuse the configuration.
     """
-    conf_rules_directory = models.CharField(max_length=400)
-    conf_file = models.CharField(max_length=800)
-    bin_directory = models.CharField(max_length=800)
+    with open(settings.BASE_DIR + "/bro/default-broctl.cfg", encoding='utf_8') as f:
+        BROCTL_DEFAULT = f.read()
+    with open(settings.BASE_DIR + "/bro/default-networks.cfg", encoding='utf_8') as f:
+        NETWORKS_DEFAULT = f.read()
+    with open(settings.BASE_DIR + "/bro/default-node.cfg", encoding='utf_8') as f:
+        NODE_DEFAULT = f.read()
+    with open(settings.BASE_DIR + "/bro/default-local.bro", encoding='utf_8') as f:
+        LOCAL_DEFAULT = f.read()
+    policydir = models.CharField(max_length=400, default="/usr/local/bro/share/bro/policy/")
+    bin_directory = models.CharField(max_length=800, default="/usr/local/bro/bin/")
+    broctl_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/broctl.cfg")
+    broctl_cfg_text = models.TextField(default=BROCTL_DEFAULT)
+    node_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/node.cfg")
+    node_cfg_text = models.TextField(default=NODE_DEFAULT)
+    networks_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/networks.cfg")
+    networks_cfg_text = models.TextField(default=NETWORKS_DEFAULT)
+    local_bro = models.CharField(max_length=400, default="/etc/bro/site/local.bro")
+    local_bro_text = models.TextField(default=LOCAL_DEFAULT)
 
     def __str__(self):
         return self.name
-
-    @classmethod
-    def get_all(cls):
-        return cls.objects.all()
-
-    @classmethod
-    def get_by_id(cls, id):
-        try:
-            object = cls.objects.get(id=id)
-        except cls.DoesNotExist as e:
-            logger.debug('Tries to access an object that does not exist : ' + str(e))
-            return None
-        return object
 
     def test(self):  # TODO Not yet implemented
         pass
@@ -50,24 +53,20 @@ class SignatureBro(Rule):
     msg = models.CharField(max_length=1000)
 
     def __init__(self, *args, **kwargs):
-        super(Rule, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.sid = self.id
 
     def __str__(self):
         return str(self.sid) + " : " + str(self.msg)
 
     @classmethod
-    def get_all(cls):
-        return cls.objects.all()
-
-    @classmethod
-    def get_by_id(cls, id):
+    def get_by_sid(cls, sid):
         try:
-            object = cls.objects.get(id=id)
+            obj = cls.objects.get(sid=sid)
         except cls.DoesNotExist as e:
             logger.debug('Tries to access an object that does not exist : ' + str(e))
             return None
-        return object
+        return obj
 
     @classmethod
     def find(cls, pattern):
@@ -78,30 +77,23 @@ class SignatureBro(Rule):
     def extract_signature_attributs(cls, line, rulesets=None):  # TODO Not yet implemented
         pass
 
-    def test(self):  # TODO Not yet implemented
-        tmpdir = settings.BASE_DIR + "/tmp/test_sig/"
-        if not os.path.exists(tmpdir):
-            os.makedirs(tmpdir)
-        rule_file = tmpdir + str(self.sid) + ".sig"
-        with open(rule_file, 'w') as f:
-            f.write(self.rule_full)
-        cmd = [settings.BRO_BINARY + "bro",
-               '-r', settings.BASE_DIR + '/bro/tests/data/test.pcap',
-               '-s', rule_file
-               ]
-        process = subprocess.Popen(cmd, cwd=tmpdir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (outdata, errdata) = process.communicate()
-        logger.debug(outdata)
-        f.close()
-        # Remove files
-        os.remove(rule_file)
-        for file in glob.glob(tmpdir + "*.log"):
-            os.remove(file)
-        # if success ok
-        if "Error in signature" in outdata:
-            return {'status': False, 'errors': errdata}
-        else:
-            return {'status': True}
+    def test(self):
+        with self.get_tmp_dir("test_sig") as tmp_dir:
+            rule_file = tmp_dir + str(self.sid) + ".sig"
+            with open(rule_file, 'w') as f:
+                f.write(self.rule_full)
+            cmd = [settings.BRO_BINARY,
+                   '-a', '-S',
+                   '-s', rule_file
+                   ]
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (outdata, errdata) = process.communicate()
+            logger.debug(outdata)
+            # if success ok
+            if "Error in signature" in outdata:
+                return {'status': False, 'errors': errdata}
+            else:
+                return {'status': True}
 
 
 class ScriptBro(Rule):
@@ -135,8 +127,23 @@ class ScriptBro(Rule):
     def extract_script_attributs(cls, file, rulesets=None):  # TODO Not yet implemented
         pass
 
-    def test(self):  # TODO Not yet implemented
-        pass
+    def test(self):
+        with self.get_tmp_dir("test_script") as tmp_dir:
+            rule_file = tmp_dir + str(self.id) + ".bro"
+            with open(rule_file, 'w') as f:
+                f.write(self.rule_full)
+            cmd = [settings.BRO_BINARY,
+                   '-a', '-S',
+                   '-s', rule_file
+                   ]
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (outdata, errdata) = process.communicate()
+            logger.debug(outdata)
+            # if success ok
+            if "Error in script" in outdata:
+                return {'status': False, 'errors': errdata}
+            else:
+                return {'status': True}
 
 
 class RuleSetBro(RuleSet):
@@ -178,97 +185,125 @@ class Bro(Probe):
     Stores an instance of Bro IDS software. Configuration settings.
     """
     rulesets = models.ManyToManyField(RuleSetBro, blank=True)
-    configuration = models.ForeignKey(ConfBro)
+    configuration = models.ForeignKey(Configuration, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
-        super(Probe, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.type = self.__class__.__name__
 
     def __str__(self):
         return self.name + " : " + self.description
 
-    @classmethod
-    def get_all(cls):
-        return cls.objects.all()
-
-    @classmethod
-    def get_by_id(cls, id):
+    def install(self, version="2.5.3"):
+        if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+            command1 = "apt update"
+            command2 = "apt install cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig " \
+                       "zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin " \
+                       "wget curl ca-certificates "
+            command3 = "wget https://www.bro.org/downloads/bro-" + version + ".tar.gz"
+            command4 = "tar xf bro-" + version + ".tar.gz"
+            command5 = "( cd bro-" + version + " && ./configure )"
+            command6 = "( cd bro-" + version + " && make -j$(nproc) )"
+            command7 = "( cd bro-" + version + " && make install )"
+            command8 = "rm bro-" + version + ".tar.gz && rm -rf bro-" + version
+            command9 = "export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/"
+        else:
+            raise Exception("Not yet implemented")
+        tasks_unordered = {"1_update_repo": command1,
+                           "2_install_dep": command2,
+                           "3_download": command3,
+                           "4_tar": command4,
+                           "5_configure": command5,
+                           "6_make": command6,
+                           "7_make_install": command7,
+                           "8_rm": command8,
+                           "9_export": command9}
+        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
         try:
-            object = cls.objects.get(id=id)
-        except cls.DoesNotExist as e:
-            logger.debug('Tries to access an object that does not exist : ' + str(e))
-            return None
-        return object
+            response = execute(self.server, tasks, become=True)
+            self.installed = True
+            self.save()
+        except Exception as e:
+            logger.exception('install failed')
+            return {'status': False, 'errors': str(e)}
+        logger.debug("output : " + str(response))
+        return {'status': True}
 
-    def install(self):
-        path = "/opt"
-        list_package = ["wget", "curl", "ca-certificates", "build-essential", "tcpdump", "cmake", "make", "gcc", "g++",
-                        "flex", "bison", "libpcap-dev", "python-dev", "swig", "zlib1g-dev", "tshark", "libssl1.0-dev",
-                        "libgeoip-dev", "git"]
-        list_install = list()
-        for package in list_package:
-            list_install.append(
-                dict(name="apt_install", action=dict(module='apt', name=package, state='present', update_cache='yes')))
-        tasks = [
-            dict(name="apt_install", action=dict(module='shell', args='apt install python3-apt')),
-        ]
-        tasks = tasks + list_install
-        list_action = [
-            dict(name="wget",
-                 action=dict(module='shell', chdir=path, args='wget https://www.bro.org/downloads/bro-2.5.2.tar.gz')),
-            dict(name="tar_extract", action=dict(module='shell', chdir=path, args='tar xvf bro-2.5.2.tar.gz')),
-            dict(name="configure", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='./configure')),
-            dict(name="make", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='make')),
-            dict(name="make_install", action=dict(module='shell', chdir=path + "/bro-2.5.2/", args='make install')),
-            dict(name="export_PATH",
-                 action=dict(module='shell', chdir=path, args='export PATH=/usr/local/bro/bin:$PATH')),
-            dict(name="export LD_LIBRARY",
-                 action=dict(module='shell', chdir=path, args='export LD_LIBRARY_PATH=/usr/local/bro/lib/')),
-            dict(name="git_af_packet-plugin", action=dict(module='shell', chdir=path,
-                                                          args='git clone https://github.com/J-Gras' +
-                                                               '/bro-af_packet-plugin.git')),
-            dict(name="af_packet-plugin_configure",
-                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='./configure')),
-            dict(name="af_packet-plugin_make",
-                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make')),
-            dict(name="af_packet-plugin_make_install",
-                 action=dict(module='shell', chdir=path + "/bro-af_packet-plugin/", args='make install')),
-        ]
-        tasks = tasks + list_action
-        return execute(self, tasks)
+    def update(self):
+        return self.install()
 
     def start(self):
-        tasks = [
-            dict(name="start", action=dict(module='shell', args=self.configuration.bin_directory + 'broctl start')),
-        ]
-        return execute(self.server, tasks)
+        if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+            command = settings.BROCTL_BINARY + " start"
+        else:  # pragma: no cover
+            raise Exception("Not yet implemented")
+        tasks = {"start": command}
+        try:
+            response = execute(self.server, tasks, become=True)
+        except Exception:
+            logger.exception("Error during start")
+            return {'status': False, 'errors': "Error during start"}
+        logger.debug("output : " + str(response))
+        return {'status': True}
 
     def stop(self):
-        tasks = [
-            dict(name="stop", action=dict(module='shell', args=self.configuration.bin_directory + 'broctl stop')),
-        ]
-        return execute(self, tasks)
-
-    def restart(self):
-        tasks = [
-            dict(name="restart", action=dict(module='shell', args=self.configuration.bin_directory + 'broctl deploy')),
-        ]
-        return execute(self.server, tasks)
+        if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+            command = settings.BROCTL_BINARY + " stop"
+        else:  # pragma: no cover
+            raise Exception("Not yet implemented")
+        tasks = {"stop": command}
+        try:
+            response = execute(self.server, tasks, become=True)
+        except Exception:
+            logger.exception("Error during stop")
+            return {'status': False, 'errors': "Error during stop"}
+        logger.debug("output : " + str(response))
+        return {'status': True}
 
     def status(self):
-        tasks = [
-            dict(name="status", action=dict(module='shell', args=self.configuration.bin_directory + 'broctl status')),
-        ]
-        return execute(self.server, tasks)
+        if self.installed:
+            if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+                command = settings.BROCTL_BINARY + " status"
+            else:  # pragma: no cover
+                raise Exception("Not yet implemented")
+            tasks = {"status": command}
+            try:
+                response = execute(self.server, tasks, become=True)
+            except Exception:
+                logger.exception('Failed to get status')
+                return 'Failed to get status'
+            logger.debug("output : " + str(response))
+            return response['status']
+        else:
+            return " "
 
     def reload(self):
-        tasks = [
-            dict(name="reload", action=dict(module='shell', args=self.configuration.bin_directory + 'broctl deploy')),
-        ]
-        return execute(self.server, tasks)
+        if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+            command = settings.BROCTL_BINARY + " deploy"
+        else:  # pragma: no cover
+            raise Exception("Not yet implemented")
+        tasks = {"reload": command}
+        try:
+            response = execute(self.server, tasks, become=True)
+        except Exception:
+            logger.exception("Error during reload")
+            return {'status': False, 'errors': "Error during reload"}
+        logger.debug("output : " + str(response))
+        return {'status': True}
 
-    def update(self):  # Not implemented
-        return None
+    def restart(self):
+        if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
+            command = settings.BROCTL_BINARY + " deploy"
+        else:  # pragma: no cover
+            raise Exception("Not yet implemented")
+        tasks = {"restart": command}
+        try:
+            response = execute(self.server, tasks, become=True)
+        except Exception:
+            logger.exception("Error during restart")
+            return {'status': False, 'errors': "Error during restart"}
+        logger.debug("output : " + str(response))
+        return {'status': True}
 
     def test_rules(self):
         test = True

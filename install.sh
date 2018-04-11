@@ -1,60 +1,52 @@
 #!/usr/bin/env bash
 
 echo '## Install Bro ##'
+# Install on ProbeManager server
 # Get args
-if [ -z $1 ] || [ $1 == 'dev' ]; then
-    arg="dev"
-    dest=""
-elif [ $1 == 'prod' ]; then
-    arg=$1
-    if [ -z $2 ]; then
-        dest='/usr/local/share'
-    else
-        dest=$2
-    fi
-else
-    echo 'Bad argument'
-    exit 1
-fi
+arg=$1
+destfull=$2
 
+if [[ "$BRO_VERSION" == "" ]]; then
+    BRO_VERSION="2.5.3"
+fi
 config=""
+rules=""
 # OSX with brew
 if [[ $OSTYPE == *"darwin"* ]]; then
     if brew --version | grep -qw Homebrew ; then
         if ! brew list | grep -qw bro ; then
             brew install bro
         fi
-        config="/usr/local/bin/"
+        config="/usr/local/Cellar/bro/"$BRO_VERSION"/share/bro/site/"
+        rules="/usr/local/opt/bro"
     fi
 fi
 # Debian
 if [ -f /etc/debian_version ]; then
     if ! type bro ; then
-        apt-get install -y curl ca-certificates build-essential tcpdump cmake make gcc g++ flex bison libpcap-dev  python-dev swig zlib1g-dev screen tshark apache2 libssl1.0-dev libgeoip-dev wget git
-        wget -P /opt https://www.bro.org/downloads/bro-2.5.3.tar.gz
-        tar xvf /opt/bro-2.5.3.tar.gz -C /opt
-        ( cd /opt/bro-2.5.3 && ./configure )
-        ( cd /opt/bro-2.5.3 && make )
-        ( cd /opt/bro-2.5.3 && make install )
-        export PATH=/usr/local/bro/bin:$PATH
-        export LD_LIBRARY_PATH=/usr/local/bro/lib/
-        ( cd /usr/local/bin && ln -s /usr/local/bro/bin/bro bro )
-        ( cd /usr/local/bin && ln -s /usr/local/bro/bin/broctl broctl )
-        # Activer af_packet :
-        git clone https://github.com/J-Gras/bro-af_packet-plugin.git /opt/bro-af_packet-plugin/
-        ( cd /opt/bro-af_packet-plugin/ && ./configure --bro-dist=/opt/bro-2.5.3 )
-        ( cd /opt/bro-af_packet-plugin/ && make )
-        ( cd /opt/bro-af_packet-plugin/ && make install )
+        sudo apt update
+        sudo apt install cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates
+        wget https://www.bro.org/downloads/bro-"$BRO_VERSION".tar.gz
+        tar xf bro-"$BRO_VERSION".tar.gz
+        ( cd bro-"$BRO_VERSION" && ./configure )
+        ( cd bro-"$BRO_VERSION" && make -j$(nproc)  )
+        ( cd bro-"$BRO_VERSION" && sudo make install )
+        rm bro-"$BRO_VERSION".tar.gz && rm -rf bro-"$BRO_VERSION"
+        export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
+        sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
+        sudo chown $(whoami) $( which bro )
+        sudo chown -R $(whoami) /usr/local/bro/etc/
+        sudo chown -R $(whoami) /etc/bro/site/
     fi
-    config="/usr/local/bro/bin/"
+    config="/usr/local/bro/etc/"
+    rules="/etc/bro/site/"
 fi
-if [ $arg == 'prod' ]; then
-    touch /var/log/suricata/suricata.log
-    chmod a+w  /var/log/suricata/suricata.log
-    chmod a+r  /var/log/suricata/suricata.log
-    echo "[BRO]" >> "$dest"conf.ini
-    echo "BRO_BINARY =  $( which bro )" >> "$dest"conf.ini
-else
-    echo "[BRO]" >> conf.ini
-    echo "BRO_BINARY =  $( which bro )" >> conf.ini
-fi
+which bro
+bro --version
+which broctl
+broctl --version
+
+echo "BRO_BINARY = '$( which bro )'" > "$destfull"probemanager/bro/settings.py
+echo "BROCTL_BINARY = '$( which broctl )'" >> "$destfull"probemanager/bro/settings.py
+echo "BRO_CONFIG = '$config'" >> "$destfull"probemanager/bro/settings.py
+echo "BRO_RULES = '$rules'" >> "$destfull"probemanager/bro/settings.py
