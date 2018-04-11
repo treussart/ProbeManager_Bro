@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import re
 import subprocess
 from collections import OrderedDict
 
@@ -21,6 +22,8 @@ class Configuration(ProbeConfiguration):
     """
     Configuration for Bro IDS, Allows you to reuse the configuration.
     """
+    probeconfiguration = models.OneToOneField(ProbeConfiguration, parent_link=True, related_name='bro_configuration',
+                                              on_delete=models.CASCADE, editable=False)
     with open(settings.BASE_DIR + "/bro/default-broctl.cfg", encoding='utf_8') as f:
         BROCTL_DEFAULT = f.read()
     with open(settings.BASE_DIR + "/bro/default-networks.cfg", encoding='utf_8') as f:
@@ -29,8 +32,10 @@ class Configuration(ProbeConfiguration):
         NODE_DEFAULT = f.read()
     with open(settings.BASE_DIR + "/bro/default-local.bro", encoding='utf_8') as f:
         LOCAL_DEFAULT = f.read()
-    my_scripts = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/myscripts.bro", editable=False)
-    my_signatures = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/mysignatures.sig", editable=False)
+    my_scripts = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/myscripts.bro",
+                                  editable=False)
+    my_signatures = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/mysignatures.sig",
+                                     editable=False)
     policydir = models.CharField(max_length=400, default="/usr/local/bro/share/bro/policy/")
     bin_directory = models.CharField(max_length=800, default="/usr/local/bro/bin/")
     broctl_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/broctl.cfg")
@@ -53,7 +58,7 @@ class SignatureBro(Rule):
     """
     Stores a signature Bro compatible. (pattern matching), see https://www.bro.org/sphinx/frameworks/signatures.html
     """
-    msg = models.CharField(max_length=1000)
+    msg = models.CharField(max_length=1000, unique=True)
     pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __init__(self, *args, **kwargs):
@@ -73,13 +78,40 @@ class SignatureBro(Rule):
         return obj
 
     @classmethod
+    def get_by_msg(cls, msg):
+        try:
+            obj = cls.objects.get(msg=msg)
+        except cls.DoesNotExist as e:
+            logger.debug('Tries to access an object that does not exist : ' + str(e))
+            return None
+        return obj
+
+    @classmethod
     def find(cls, pattern):
         """Search the pattern in all the signatures"""
         return cls.objects.filter(rule_full__contains=pattern)
 
     @classmethod
-    def extract_signature_attributs(cls, line, rulesets=None):  # TODO Not yet implemented
-        pass
+    def extract_signature_attributs(cls, line, rulesets=None):
+        getmsg = re.compile("event *\"(.*?)\"")
+        try:
+            match = getmsg.search(line)
+            if match:
+                if SignatureBro.get_by_msg(match.groups()[0]):
+                    signature = cls.get_by_msg(match.groups()[0])
+                    signature.updated_date = timezone.now()
+                else:
+                    signature = SignatureBro()
+                    signature.created_date = timezone.now()
+                signature.rule_full = line
+                signature.save()
+                if rulesets:
+                    for ruleset in rulesets:
+                        ruleset.signatures.add(signature)
+                        ruleset.save()
+                return "rule saved : " + str(signature.sid)
+        except:
+            return "rule not saved"
 
     def test(self):
         with self.get_tmp_dir("test_sig") as tmp_dir:
