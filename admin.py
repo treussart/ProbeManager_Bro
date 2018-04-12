@@ -4,8 +4,10 @@ from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
+from django_celery_beat.models import PeriodicTask
 from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration
+from core.utils import create_deploy_rules_task, create_check_task
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ class BroAdmin(admin.ModelAdmin):
         super().delete_model(request, obj)
 
     def save_model(self, request, obj, form, change):
-        logger.debug("create scheduled")
+        logger.debug("create scheduled for " + str(obj))
         create_deploy_rules_task(obj)
         create_check_task(obj)
         super().save_model(request, obj, form, change)
