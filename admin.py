@@ -160,17 +160,18 @@ class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test scripts failed ! " + str(errors))
 
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        response = obj.test_all()
-        if response['status']:
-            messages.add_message(request, messages.SUCCESS, "Test script OK")
-        else:
-            messages.add_message(request, messages.ERROR, "Test script failed ! " + str(response['errors']))
+    # def save_model(self, request, obj, form, change):
+    #     super().save_model(request, obj, form, change)
+    #     response = obj.test_all()
+    #     if response['status']:
+    #         messages.add_message(request, messages.SUCCESS, "Test script OK")
+    #     else:
+    #         messages.add_message(request, messages.ERROR, "Test script failed ! " + str(response['errors']))
 
     search_fields = ('rule_full',)
     list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
-    list_display = ('id', 'name', 'enabled')
+    list_display = ('name', 'enabled')
+    action_form = UpdateActionForm
     actions = [MarkedRuleMixin.make_enabled, MarkedRuleMixin.make_disabled,
                add_ruleset, remove_ruleset, test_scripts]
 
@@ -218,13 +219,13 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test signatures failed ! " + str(errors))
 
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        response = obj.test_all()
-        if response['status']:
-            messages.add_message(request, messages.SUCCESS, "Test signature OK")
-        else:
-            messages.add_message(request, messages.ERROR, "Test signature failed ! " + str(response['errors']))
+    # def save_model(self, request, obj, form, change):
+    #     super().save_model(request, obj, form, change)
+    #     response = obj.test_all()
+    #     if response['status']:
+    #         messages.add_message(request, messages.SUCCESS, "Test signature OK")
+    #     else:
+    #         messages.add_message(request, messages.ERROR, "Test signature failed ! " + str(response['errors']))
 
     search_fields = ('rule_full',)
     list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
