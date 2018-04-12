@@ -119,8 +119,8 @@ class SignatureBro(Rule):
             with open(rule_file, 'w') as f:
                 f.write(self.rule_full)
             cmd = [settings.BRO_BINARY,
-                   '-a', '-S',
-                   '-s', rule_file
+                   '-s', rule_file,
+                   '-r', settings.BASE_DIR + "/bro/tests/data/test.pcap"
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
@@ -136,7 +136,7 @@ class SignatureBro(Rule):
             rule_file = tmp_dir + "signature.txt"
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full)
-            cmd = [settings.BRO_BINARY + "bro",
+            cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
                    '-s', rule_file
                    ]
@@ -177,7 +177,7 @@ class ScriptBro(Rule):
     """
     Stores a script Bro compatible. see : https://www.bro.org/sphinx/scripting/index.html#understanding-bro-scripts
     """
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True, verbose_name="msg in notice")
     pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __str__(self):
@@ -194,18 +194,18 @@ class ScriptBro(Rule):
 
     def test(self):
         with self.get_tmp_dir("test_script") as tmp_dir:
-            rule_file = tmp_dir + str(self.id) + ".bro"
+            rule_file = tmp_dir + str(self.pk) + ".bro"
             with open(rule_file, 'w') as f:
                 f.write(self.rule_full)
             cmd = [settings.BRO_BINARY,
-                   '-a', '-S',
-                   '-s', rule_file
+                   '-a',
+                   rule_file
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
             logger.debug(outdata)
             # if success ok
-            if "Error in script" in outdata:
+            if "error in " in outdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -215,9 +215,9 @@ class ScriptBro(Rule):
             rule_file = tmp_dir + "script.txt"
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full)
-            cmd = [settings.BRO_BINARY + "bro",
+            cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
-                   '-s', rule_file
+                   rule_file
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
