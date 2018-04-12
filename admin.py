@@ -38,7 +38,7 @@ class MarkedRuleMixin(admin.ModelAdmin):
 
 
 class RuleSetBroAdmin(admin.ModelAdmin):
-    def test_signatures(self, request, obj):
+    def test_rules(self, request, obj):
         test = True
         errors = list()
         for ruleset in obj:
@@ -47,12 +47,17 @@ class RuleSetBroAdmin(admin.ModelAdmin):
                 if not response['status']:
                     test = False
                     errors.append(str(signature) + " : " + str(response['errors']))
+            for script in ruleset.scripts.all():
+                response = script.test()
+                if not response['status']:
+                    test = False
+                    errors.append(str(script) + " : " + str(response['errors']))
         if test:
-            messages.add_message(request, messages.SUCCESS, "Test signatures OK")
+            messages.add_message(request, messages.SUCCESS, "Test rules OK")
         else:
-            messages.add_message(request, messages.ERROR, "Test signatures failed ! " + str(errors))
+            messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
 
-    actions = [test_signatures]
+    actions = [test_rules]
 
 
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
