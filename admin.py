@@ -1,15 +1,9 @@
 import logging
-import os
-import time
 
 from django import forms
-from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
-from django.http import HttpResponseRedirect
-from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration
 
@@ -178,7 +172,7 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
 
     search_fields = ('rule_full',)
     list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
-    list_display = ('sid', 'msg', 'enabled')
+    list_display = ('msg', 'enabled')
     action_form = UpdateActionForm
     actions = [MarkedRuleMixin.make_enabled, MarkedRuleMixin.make_disabled,
                add_ruleset, remove_ruleset, test_signatures]
