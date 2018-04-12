@@ -60,13 +60,20 @@ class RuleSetBroAdmin(admin.ModelAdmin):
     actions = [test_rules]
 
 
+class BroAdmin(admin.ModelAdmin):
+    class Media:
+        js = (
+            'bro/js/mask-crontab.js',
+        )
+
+
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
     class Media:
         js = (
             'bro/js/mask-ruleset-field.js',
         )
 
-      def add_ruleset(self, request, queryset):
+    def add_ruleset(self, request, queryset):
         ruleset_id = request.POST['ruleset']
         if ruleset_id:
             ruleset = RuleSetBro.get_by_id(ruleset_id)
@@ -177,7 +184,7 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
                add_ruleset, remove_ruleset, test_signatures]
 
 
-admin.site.register(Bro)
+admin.site.register(Bro, BroAdmin)
 admin.site.register(SignatureBro, SignatureBroAdmin)
 admin.site.register(ScriptBro, ScriptBroAdmin)
 admin.site.register(RuleSetBro, RuleSetBroAdmin)
