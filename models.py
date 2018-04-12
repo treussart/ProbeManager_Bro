@@ -120,7 +120,7 @@ class SignatureBro(Rule):
                 f.write(self.rule_full)
             cmd = [settings.BRO_BINARY,
                    '-s', rule_file,
-                   '-r', settings.BASE_DIR + "/bro/tests/data/test.pcap"
+                   '-r', settings.BASE_DIR + "/bro/tests/data/test-signature.pcap"
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
