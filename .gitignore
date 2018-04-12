@@ -99,3 +99,5 @@ ENV/
 .idea
 fixtures/test-bro-probe.json
 settings.py
+version.txt
+/migrations/0*.py
