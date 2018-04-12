@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
-
+from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration
 
 logger = logging.getLogger(__name__)
@@ -59,6 +59,60 @@ class BroAdmin(admin.ModelAdmin):
         js = (
             'bro/js/mask-crontab.js',
         )
+
+    def get_form(self, request, obj=None, **kwargs):
+        """A ModelAdmin that uses a different form class when adding an object."""
+        if obj is None:
+            return super(BroAdmin, self).get_form(request, obj, **kwargs)
+        else:
+            return BroChangeForm
+
+    def delete(self, request, obj, probe=None):
+        if probe is None:
+            probe = obj
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=probe.name + "_deploy_rules_" + str(probe.scheduled_rules_deployment_crontab))
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        messages.add_message(request, messages.SUCCESS, "Bro instance " + probe.name + " deleted")
+        super().delete_model(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        logger.debug("create scheduled")
+        create_deploy_rules_task(obj)
+        create_check_task(obj)
+        super().save_model(request, obj, form, change)
+
+    def delete_model(self, request, obj):
+        self.delete(request, obj)
+
+    def delete_bro(self, request, obj):
+        for probe in obj:
+            self.delete(request, obj, probe=probe)
+
+    def get_actions(self, request):
+        actions = super(BroAdmin, self).get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
+    def test_rules(self, request, obj):
+        test = True
+        errors = list()
+        for probe in obj:
+            response = probe.test_rules()
+            if not response['status']:
+                test = False
+                errors.append(str(probe) + " : " + str(response['errors']))
+        if test:
+            messages.add_message(request, messages.SUCCESS, "Test rules OK")
+        else:
+            messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
+
+    actions = [delete_bro, test_rules]
 
 
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):

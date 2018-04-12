@@ -410,6 +410,11 @@ class Bro(Probe):
                 if not response['status']:
                     test = False
                     errors.append(str(response['errors']))
+            for script in ruleset.scripts.all():
+                response = script.test()
+                if not response['status']:
+                    test = False
+                    errors.append(str(script) + " : " + str(response['errors']))
         if test:
             return {'status': True}
         else:
