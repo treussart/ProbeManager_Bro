@@ -15,7 +15,7 @@
     "model": "bro.scriptbro",
     "pk": 102,
     "fields": {
-        "name": "Detect file downloads that have hash values matching files in Team",
+        "name": "The hash value of a file transferred over HTTP matched",
         "pcap_success": ""
     }
 }
