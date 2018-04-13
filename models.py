@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 from collections import OrderedDict
+from jinja2 import Template
 
 import select2.fields
 from django.conf import settings
@@ -35,14 +36,15 @@ class Configuration(ProbeConfiguration):
                                   editable=False)
     my_signatures = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/mysignatures.sig",
                                      editable=False)
-    policydir = models.CharField(max_length=400, default="/usr/local/bro/share/bro/policy/")
-    broctl_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/broctl.cfg")
+    policydir = models.CharField(max_length=400, default="/usr/local/bro/share/bro/policy/", editable=False)
+    bin_directory = models.CharField(max_length=800, default="/usr/local/bro/bin/", editable=False)
+    broctl_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/broctl.cfg", editable=False)
     broctl_cfg_text = models.TextField(default=BROCTL_DEFAULT)
-    node_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/node.cfg")
+    node_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/node.cfg", editable=False)
     node_cfg_text = models.TextField(default=NODE_DEFAULT)
-    networks_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/networks.cfg")
+    networks_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/networks.cfg", editable=False)
     networks_cfg_text = models.TextField(default=NETWORKS_DEFAULT)
-    local_bro = models.CharField(max_length=400, default="/etc/bro/site/local.bro")
+    local_bro = models.CharField(max_length=400, default="/etc/bro/site/local.bro", editable=False)
     local_bro_text = models.TextField(default=LOCAL_DEFAULT)
 
     def __str__(self):
@@ -287,29 +289,30 @@ class Bro(Probe):
 
     def install(self, version="2.5.3"):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command1 = "apt update"
-            command2 = "apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig " \
-                       "zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin " \
-                       "wget curl ca-certificates "
-            command3 = "wget https://www.bro.org/downloads/bro-" + version + ".tar.gz"
-            command4 = "tar xf bro-" + version + ".tar.gz"
-            command5 = "sh -c 'cd bro-" + version + " ; ./configure'"
-            command6 = "sh -c 'cd bro-" + version + " ; make -j$(nproc)'"
-            command7 = "sh -c 'cd bro-" + version + " ; make install'"
-            command8 = "rm bro-" + version + ".tar.gz && rm -rf bro-" + version
-            command9 = "export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/"
+            install_script = """
+            if ! type /usr/local/bro/bin/bro ; then
+                apt update
+                apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates 
+                wget https://www.bro.org/downloads/bro-{{ version }}.tar.gz
+                tar xf bro-{{ version }}.tar.gz
+                ( cd bro-{{ version }} && ./configure )
+                ( cd bro-{{ version }} && make -j$(nproc) )
+                ( cd bro-{{ version }} && make install )
+                rm bro-{{ version }}.tar.gz && rm -rf bro-{{ version }}
+                export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/
+                echo "PATH=/usr/local/bro/bin:$PATH" >> .bashrc
+                echo "LD_LIBRARY_PATH=/usr/local/bro/lib/" >> .bashrc
+                exit 0
+            else
+                echo "Already installed"
+                exit 0
+            fi
+            """
+            t = Template(install_script)
+            command = "sh -c '" + t.render(version=version) + "'"
         else:
             raise Exception("Not yet implemented")
-        tasks_unordered = {"1_update_repo": command1,
-                           "2_install_dep": command2,
-                           "3_download": command3,
-                           "4_tar": command4,
-                           "5_configure": command5,
-                           "6_make": command6,
-                           "7_make_install": command7,
-                           "8_rm": command8,
-                           "9_export": command9}
-        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+        tasks = {"install": command}
         try:
             response = execute(self.server, tasks, become=True)
             self.installed = True
@@ -325,7 +328,7 @@ class Bro(Probe):
 
     def start(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = "broctl start"
+            command = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"start": command}
@@ -339,7 +342,7 @@ class Bro(Probe):
 
     def stop(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = "broctl stop"
+            command = self.configuration.bin_directory + "broctl stop"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"stop": command}
@@ -354,7 +357,7 @@ class Bro(Probe):
     def status(self):
         if self.installed:
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-                command = "broctl status"
+                command = self.configuration.bin_directory + "broctl status"
             else:  # pragma: no cover
                 raise Exception("Not yet implemented")
             tasks = {"status": command}
@@ -370,7 +373,7 @@ class Bro(Probe):
 
     def reload(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = "broctl deploy"
+            command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"reload": command}
@@ -384,8 +387,8 @@ class Bro(Probe):
 
     def restart(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command1 = "broctl stop"
-            command2 = "broctl start"
+            command1 = self.configuration.bin_directory + "broctl stop"
+            command2 = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks_unordered = {"1_stop": command1,
