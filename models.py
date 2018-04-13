@@ -44,14 +44,14 @@ class Configuration(ProbeConfiguration):
     node_cfg_text = models.TextField(default=NODE_DEFAULT)
     networks_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/networks.cfg", editable=False)
     networks_cfg_text = models.TextField(default=NETWORKS_DEFAULT)
-    local_bro = models.CharField(max_length=400, default="/etc/bro/site/local.bro", editable=False)
+    local_bro = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/local.bro", editable=False)
     local_bro_text = models.TextField(default=LOCAL_DEFAULT)
 
     def __str__(self):
         return self.name
 
     def test(self):  # TODO Not yet implemented
-        pass
+        return {'status': True}
 
 
 class SignatureBro(Rule):
