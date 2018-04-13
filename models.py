@@ -289,7 +289,7 @@ class Bro(Probe):
     def install(self, version="2.5.3"):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command1 = "apt update"
-            command2 = "apt install cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig " \
+            command2 = "apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig " \
                        "zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin " \
                        "wget curl ca-certificates "
             command3 = "wget https://www.bro.org/downloads/bro-" + version + ".tar.gz"
