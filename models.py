@@ -357,7 +357,7 @@ class Bro(Probe):
     def status(self):
         if self.installed:
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-                command = self.configuration.bin_directory + "broctl status"
+                command = self.configuration.bin_directory + "broctl status | sed -n 2p"
             else:  # pragma: no cover
                 raise Exception("Not yet implemented")
             tasks = {"status": command}
@@ -370,6 +370,9 @@ class Bro(Probe):
             return response['status']
         else:
             return " "
+
+    def uptime(self):
+        return self.status()
 
     def reload(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
