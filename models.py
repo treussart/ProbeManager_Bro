@@ -36,7 +36,6 @@ class Configuration(ProbeConfiguration):
     my_signatures = models.CharField(max_length=400, default="/usr/local/bro/share/bro/site/mysignatures.sig",
                                      editable=False)
     policydir = models.CharField(max_length=400, default="/usr/local/bro/share/bro/policy/")
-    bin_directory = models.CharField(max_length=800, default="/usr/local/bro/bin/")
     broctl_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/broctl.cfg")
     broctl_cfg_text = models.TextField(default=BROCTL_DEFAULT)
     node_cfg = models.CharField(max_length=400, default="/usr/local/bro/etc/node.cfg")
@@ -326,7 +325,7 @@ class Bro(Probe):
 
     def start(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = self.configuration.bin_directory + "broctl start"
+            command = "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"start": command}
@@ -340,7 +339,7 @@ class Bro(Probe):
 
     def stop(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = self.configuration.bin_directory + "broctl stop"
+            command = "broctl stop"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"stop": command}
@@ -355,7 +354,7 @@ class Bro(Probe):
     def status(self):
         if self.installed:
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-                command = self.configuration.bin_directory + "broctl status"
+                command = "broctl status"
             else:  # pragma: no cover
                 raise Exception("Not yet implemented")
             tasks = {"status": command}
@@ -371,7 +370,7 @@ class Bro(Probe):
 
     def reload(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = self.configuration.bin_directory + "broctl deploy"
+            command = "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"reload": command}
@@ -385,8 +384,8 @@ class Bro(Probe):
 
     def restart(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command1 = self.configuration.bin_directory + "broctl stop"
-            command2 = self.configuration.bin_directory + "broctl start"
+            command1 = "broctl stop"
+            command2 = "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks_unordered = {"1_stop": command1,
