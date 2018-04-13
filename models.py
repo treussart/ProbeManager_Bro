@@ -294,9 +294,9 @@ class Bro(Probe):
                        "wget curl ca-certificates "
             command3 = "wget https://www.bro.org/downloads/bro-" + version + ".tar.gz"
             command4 = "tar xf bro-" + version + ".tar.gz"
-            command5 = "( cd bro-" + version + " && ./configure )"
-            command6 = "( cd bro-" + version + " && make -j$(nproc) )"
-            command7 = "( cd bro-" + version + " && make install )"
+            command5 = "cd bro-" + version + " ; ./configure"
+            command6 = "cd bro-" + version + " ; make -j$(nproc)"
+            command7 = "cd bro-" + version + " ; make install"
             command8 = "rm bro-" + version + ".tar.gz && rm -rf bro-" + version
             command9 = "export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/"
         else:
