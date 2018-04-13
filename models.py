@@ -326,7 +326,7 @@ class Bro(Probe):
 
     def start(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = settings.BROCTL_BINARY + " start"
+            command = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"start": command}
@@ -340,7 +340,7 @@ class Bro(Probe):
 
     def stop(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = settings.BROCTL_BINARY + " stop"
+            command = self.configuration.bin_directory + "broctl stop"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"stop": command}
@@ -355,7 +355,7 @@ class Bro(Probe):
     def status(self):
         if self.installed:
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-                command = settings.BROCTL_BINARY + " status"
+                command = self.configuration.bin_directory + "broctl status"
             else:  # pragma: no cover
                 raise Exception("Not yet implemented")
             tasks = {"status": command}
@@ -371,7 +371,7 @@ class Bro(Probe):
 
     def reload(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command = settings.BROCTL_BINARY + " deploy"
+            command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"reload": command}
@@ -385,8 +385,8 @@ class Bro(Probe):
 
     def restart(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
-            command1 = settings.BROCTL_BINARY + " stop"
-            command2 = settings.BROCTL_BINARY + " start"
+            command1 = self.configuration.bin_directory + "broctl stop"
+            command2 = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks_unordered = {"1_stop": command1,
