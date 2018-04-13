@@ -1,0 +1,24 @@
+[
+{
+    "model": "rules.ruleset",
+    "pk": 101,
+    "fields": {
+        "name": "test_bro_ruleset",
+        "description": "",
+        "created_date": "2018-04-12T16:32:25.300Z",
+        "updated_date": null
+    }
+},
+{
+  "model": "bro.rulesetbro",
+  "pk": 101,
+  "fields": {
+      "signatures": [
+          101
+      ],
+      "scripts": [
+          102
+      ]
+  }
+}
+]

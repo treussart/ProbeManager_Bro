@@ -1,0 +1,31 @@
+[
+{
+    "model": "core.probe",
+    "pk": 101,
+    "fields": {
+        "name": "test_instance_bro",
+        "description": "",
+        "created_date": "2018-04-12T18:52:46.763Z",
+        "rules_updated_date": null,
+        "type": "Bro",
+        "subtype": null,
+        "secure_deployment": true,
+        "scheduled_rules_deployment_enabled": false,
+        "scheduled_rules_deployment_crontab": null,
+        "scheduled_check_enabled": true,
+        "scheduled_check_crontab": 2,
+        "server": 1,
+        "installed": true
+    }
+},
+{
+    "model": "bro.bro",
+    "pk": 101,
+    "fields": {
+        "configuration": 101,
+        "rulesets": [
+            101
+        ]
+    }
+}
+]
