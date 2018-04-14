@@ -50,3 +50,4 @@ echo "BRO_BINARY = '$( which bro )'" > "$destfull"probemanager/bro/settings.py
 echo "BROCTL_BINARY = '$( which broctl )'" >> "$destfull"probemanager/bro/settings.py
 echo "BRO_CONFIG = '$config'" >> "$destfull"probemanager/bro/settings.py
 echo "BRO_RULES = '$rules'" >> "$destfull"probemanager/bro/settings.py
+echo "BRO_VERSION = '$BRO_VERSION'" >> "$destfull"probemanager/bro/settings.py

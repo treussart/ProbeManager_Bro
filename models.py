@@ -287,7 +287,7 @@ class Bro(Probe):
     def __str__(self):
         return self.name + " : " + self.description
 
-    def install(self, version="2.5.3"):
+    def install(self, version=settings.BRO_VERSION):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             install_script = """
             if ! type /usr/local/bro/bin/bro ; then
