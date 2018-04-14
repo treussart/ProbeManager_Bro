@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 from collections import OrderedDict
-from jinja2 import Template
+from string import Template
 
 import select2.fields
 from django.conf import settings
@@ -293,12 +293,12 @@ class Bro(Probe):
             if ! type /usr/local/bro/bin/bro ; then
                 apt update
                 apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates 
-                wget https://www.bro.org/downloads/bro-{{ version }}.tar.gz
-                tar xf bro-{{ version }}.tar.gz
-                ( cd bro-{{ version }} && ./configure )
-                ( cd bro-{{ version }} && make -j$(nproc) )
-                ( cd bro-{{ version }} && make install )
-                rm bro-{{ version }}.tar.gz && rm -rf bro-{{ version }}
+                wget https://www.bro.org/downloads/bro-${version}.tar.gz
+                tar xf bro-${version}.tar.gz
+                ( cd bro-${version} && ./configure )
+                ( cd bro-${version} && make -j$(nproc) )
+                ( cd bro-${version} && make install )
+                rm bro-${version}.tar.gz && rm -rf bro-${version}
                 export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/
                 echo "export PATH=/usr/local/bro/bin:$PATH" >> .bashrc
                 echo "export LD_LIBRARY_PATH=/usr/local/bro/lib/" >> .bashrc
@@ -309,7 +309,7 @@ class Bro(Probe):
             fi
             """
             t = Template(install_script)
-            command = "sh -c '" + t.render(version=version) + "'"
+            command = "sh -c '" + t.substitute(version=version) + "'"
         else:
             raise Exception("Not yet implemented")
         tasks = {"install": command}
