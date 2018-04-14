@@ -323,8 +323,8 @@ class Bro(Probe):
         logger.debug("output : " + str(response))
         return {'status': True}
 
-    def update(self):
-        return self.install()
+    def update(self, version=settings.BRO_VERSION):
+        return self.install(version=version)
 
     def start(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
