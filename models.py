@@ -300,8 +300,8 @@ class Bro(Probe):
                 ( cd bro-{{ version }} && make install )
                 rm bro-{{ version }}.tar.gz && rm -rf bro-{{ version }}
                 export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/
-                echo "PATH=/usr/local/bro/bin:$PATH" >> .bashrc
-                echo "LD_LIBRARY_PATH=/usr/local/bro/lib/" >> .bashrc
+                echo "export PATH=/usr/local/bro/bin:$PATH" >> .bashrc
+                echo "export LD_LIBRARY_PATH=/usr/local/bro/lib/" >> .bashrc
                 exit 0
             else
                 echo "Already installed"
@@ -439,7 +439,7 @@ class Bro(Probe):
                     value_scripts += script.rule_full + os.linesep
         with self.get_tmp_dir(self.pk) as tmp_dir:
             with open(tmp_dir + "signatures.txt", 'w', encoding='utf_8') as f:
-                f.write(value_signatures)
+                f.write(value_signatures.replace('\r', ''))
             try:
                 response = execute_copy(self.server, src=tmp_dir + 'signatures.txt',
                                         dest=self.configuration.my_signatures,
@@ -449,7 +449,7 @@ class Bro(Probe):
                 deploy = False
                 errors.append(str(e))
             with open(tmp_dir + "scripts.txt", 'w', encoding='utf_8') as f:
-                f.write(value_scripts)
+                f.write(value_scripts.replace('\r', ''))
             try:
                 response = execute_copy(self.server, src=tmp_dir + 'scripts.txt',
                                         dest=self.configuration.my_scripts,
@@ -470,13 +470,13 @@ class Bro(Probe):
     def deploy_conf(self):
         with self.get_tmp_dir(self.pk) as tmp_dir:
             with open(tmp_dir + "broctl_cfg.conf", 'w', encoding='utf_8') as f:
-                f.write(self.configuration.broctl_cfg_text)
+                f.write(self.configuration.broctl_cfg_text.replace('\r', ''))
             with open(tmp_dir + "node_cfg.conf", 'w', encoding='utf_8') as f:
-                f.write(self.configuration.node_cfg_text)
+                f.write(self.configuration.node_cfg_text.replace('\r', ''))
             with open(tmp_dir + "networks_cfg.conf", 'w', encoding='utf_8') as f:
-                f.write(self.configuration.networks_cfg_text)
+                f.write(self.configuration.networks_cfg_text.replace('\r', ''))
             with open(tmp_dir + "local_bro.conf", 'w', encoding='utf_8') as f:
-                f.write(self.configuration.local_bro_text)
+                f.write(self.configuration.local_bro_text.replace('\r', ''))
             deploy = True
             errors = list()
             response = dict()
