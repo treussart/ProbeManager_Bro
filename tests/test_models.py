@@ -78,12 +78,12 @@ class ScriptBroTest(TestCase):
             script_bro.name
         with self.assertRaises(IntegrityError):
             ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
-                                          rev=0,
-                                          reference="",
-                                          rule_full="test",
-                                          enabled=True,
-                                          created_date=self.date_now
-                                          )
+                                     rev=0,
+                                     reference="",
+                                     rule_full="test",
+                                     enabled=True,
+                                     created_date=self.date_now
+                                     )
 
 
 class SignatureBroTest(TestCase):
@@ -108,13 +108,13 @@ class SignatureBroTest(TestCase):
         self.assertEqual(signature_bro, None)
         with self.assertRaises(AttributeError):
             signature_bro.pk
-        with self.assertRaises(IntegrityError):
-            SignatureBro.objects.create(msg="Found root!",
-                                        reference="",
-                                        rule_full="test",
-                                        enabled=True,
-                                        created_date=self.date_now
-                                        )
+        # with self.assertRaises(IntegrityError):
+        #     SignatureBro.objects.create(msg="Found root!",
+        #                                 reference="",
+        #                                 rule_full="test",
+        #                                 enabled=True,
+        #                                 created_date=self.date_now
+        #                                 )
 
 
 class BroTest(TestCase):
@@ -159,8 +159,12 @@ class BroTest(TestCase):
         bro = Bro.get_by_id(101)
         response = bro.deploy_conf()
         self.assertTrue(response['status'])
+        response = bro.reload()
+        self.assertTrue(response['status'])
 
     def test_deploy_rules(self):
         bro = Bro.get_by_id(101)
         response = bro.deploy_rules()
+        self.assertTrue(response['status'])
+        response = bro.reload()
         self.assertTrue(response['status'])
