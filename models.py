@@ -206,6 +206,15 @@ class ScriptBro(Rule):
         return self.name
 
     @classmethod
+    def get_by_name(cls, name):
+        try:
+            obj = cls.objects.get(name=name)
+        except cls.DoesNotExist as e:
+            logger.debug('Tries to access an object that does not exist : ' + str(e))
+            return None
+        return obj
+
+    @classmethod
     def find(cls, pattern):
         """Search the pattern in all the scripts"""
         return cls.objects.filter(rule_full__contains=pattern)
