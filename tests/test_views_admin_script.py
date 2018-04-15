@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 
-from bro.models import ScriptBro
+from bro.models import ScriptBro, RuleSetBro
 
 
 class ViewsScriptAdminTest(TestCase):
@@ -147,3 +147,18 @@ class ViewsScriptAdminTest(TestCase):
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test scripts failed', str(response.content))
+
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'add_ruleset',
+                                     '_selected_action': ScriptBro.get_by_name('failed logins').id,
+                                     'ruleset': RuleSetBro.get_by_name('test_bro_ruleset').id},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(ScriptBro.get_by_name('failed logins'), RuleSetBro.get_by_name('test_bro_ruleset').scripts.all())
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'remove_ruleset',
+                                     '_selected_action': ScriptBro.get_by_name('failed logins').id,
+                                     'ruleset': RuleSetBro.get_by_name('test_bro_ruleset').id},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(ScriptBro.get_by_name('failed logins'), RuleSetBro.get_by_name('test_bro_ruleset').scripts.all())

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 
-from bro.models import Bro, SignatureBro, RuleSetBro
+from bro.models import Bro, SignatureBro, RuleSetBro, ScriptBro
 
 
 class ViewsBroAdminTest(TestCase):
@@ -43,6 +43,29 @@ class ViewsBroAdminTest(TestCase):
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test rules OK', str(response.content))
+
+        response = self.client.post('/admin/bro/scriptbro/add/', {'rev': '0',
+                                                                  'rule_full': '1',
+                                                                  'name': 'fail script test',
+                                                                  },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('was added successfully', str(response.content))
+        self.assertIn('Test script failed', str(response.content))
+        response = self.client.post('/admin/bro/rulesetbro/101/change/', {'name': 'test',
+                                                                   'description': 'test fail',
+                                                                   'signatures': 101,
+                                                                   'scripts': ScriptBro.get_by_name('fail script test').id
+                                                                   },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/admin/bro/bro/', {'action': 'test_rules',
+                                                        '_selected_action': Bro.get_by_name('test').id},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Test rules failed', str(response.content))
+
+
 
         self.assertTrue(Bro.get_by_name('test').installed)
         response = self.client.post('/admin/bro/bro/' + str(Bro.get_by_name('test').id) + '/change/',

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 
-from bro.models import SignatureBro, RuleSetBro
+from bro.models import SignatureBro, RuleSetBro, ScriptBro
 
 
 class ViewsRuleSetAdminTest(TestCase):
@@ -41,10 +41,20 @@ class ViewsRuleSetAdminTest(TestCase):
         self.assertIn('was added successfully', str(response.content))
         self.assertIn('Test signature failed', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 2)
+        response = self.client.post('/admin/bro/scriptbro/add/', {'rev': '0',
+                                                                  'rule_full': '1',
+                                                                  'name': 'fail script test',
+                                                                  },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('was added successfully', str(response.content))
+        self.assertIn('Test script failed', str(response.content))
+
         self.assertEqual(len(RuleSetBro.get_all()), 1)
         response = self.client.post('/admin/bro/rulesetbro/add/', {'name': 'test_signatures',
                                                                    'description': 'test fail',
-                                                                   'signatures': str(SignatureBro.get_by_msg('fail test').id)
+                                                                   'signatures': str(SignatureBro.get_by_msg('fail test').id),
+                                                                   'scripts': ScriptBro.get_by_name('fail script test').id
                                                                    },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
