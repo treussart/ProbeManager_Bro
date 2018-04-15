@@ -199,7 +199,8 @@ class ScriptBro(Rule):
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-a',
-                   rule_file
+                   rule_file,
+                   '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
@@ -217,7 +218,8 @@ class ScriptBro(Rule):
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
-                   rule_file
+                   rule_file,
+                   '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (outdata, errdata) = process.communicate()
