@@ -17,8 +17,8 @@ if [[ $OSTYPE == *"darwin"* ]]; then
         if ! brew list | grep -qw bro ; then
             brew install bro
         fi
-        config="/usr/local/Cellar/bro/"$BRO_VERSION"/share/bro/site/"
-        rules="/usr/local/opt/bro"
+        config="/usr/local/etc/"
+        rules="/usr/local/opt/bro/share/bro/"
     fi
 fi
 # Debian

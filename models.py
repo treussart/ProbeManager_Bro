@@ -4,6 +4,7 @@ import re
 import subprocess
 from collections import OrderedDict
 from string import Template
+from shutil import copyfile
 
 import select2.fields
 from django.conf import settings
@@ -50,8 +51,49 @@ class Configuration(ProbeConfiguration):
     def __str__(self):
         return self.name
 
-    def test(self):  # TODO Not yet implemented
-        return {'status': True}
+    def test(self):
+        with self.get_tmp_dir("test_conf") as tmp_dir:
+            # deploy conf in local
+            broctl_cfg = tmp_dir + "broctl.cfg"
+            with open(broctl_cfg, 'w') as f:
+                f.write(self.broctl_cfg_text.replace('\r', ''))
+            copyfile(settings.BRO_CONFIG + "broctl.cfg", settings.BRO_CONFIG + "broctl.cfg.old")
+            copyfile(broctl_cfg, settings.BRO_CONFIG + "broctl.cfg")
+
+            node_cfg = tmp_dir + "node.cfg"
+            with open(node_cfg, 'w') as f:
+                f.write(self.node_cfg_text.replace('\r', ''))
+            copyfile(settings.BRO_CONFIG + "node.cfg", settings.BRO_CONFIG + "node.cfg.old")
+            copyfile(node_cfg, settings.BRO_CONFIG + "node.cfg")
+
+            networks_cfg = tmp_dir + "networks.cfg"
+            with open(networks_cfg, 'w') as f:
+                f.write(self.networks_cfg_text.replace('\r', ''))
+            copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
+            copyfile(networks_cfg, settings.BRO_CONFIG + "networks.cfg")
+
+            local_bro = tmp_dir + "local.bro"
+            with open(local_bro, 'w') as f:
+                f.write(self.local_bro_text.replace('\r', ''))
+            copyfile(settings.BRO_RULES + "site/local.bro", settings.BRO_RULES + "site/local.bro.old")
+            copyfile(local_bro, settings.BRO_RULES + "site/local.bro")
+
+            cmd = [settings.BROCTL_BINARY,
+                   'check'
+                   ]
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (outdata, errdata) = process.communicate()
+            logger.debug(outdata)
+            # remove deployed conf in local by default
+            copyfile(settings.BRO_CONFIG + "broctl.cfg.old", settings.BRO_CONFIG + "broctl.cfg")
+            copyfile(settings.BRO_CONFIG + "node.cfg.old", settings.BRO_CONFIG + "node.cfg")
+            copyfile(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
+            copyfile(settings.BRO_RULES + "site/local.bro.old", settings.BRO_RULES + "site/local.bro")
+            # if success ok
+            if b"Error" in outdata:
+                return {'status': False, 'errors': errdata}
+            else:
+                return {'status': True}
 
 
 class SignatureBro(Rule):

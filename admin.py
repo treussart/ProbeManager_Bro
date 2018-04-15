@@ -235,8 +235,33 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
                add_ruleset, remove_ruleset, test_signatures]
 
 
+class ConfigurationAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        response = obj.test()
+        if response['status']:
+            messages.add_message(request, messages.SUCCESS, "Test configuration OK")
+        else:
+            messages.add_message(request, messages.ERROR, "Test configuration failed ! " + str(response['errors']))
+        super().save_model(request, obj, form, change)
+
+    def test_configurations(self, request, obj):
+        test = True
+        errors = list()
+        for conf in obj:
+            response = conf.test()
+            if not response['status']:
+                test = False
+                errors.append(str(conf) + " : " + str(response['errors']))
+        if test:
+            messages.add_message(request, messages.SUCCESS, "Test configurations OK")
+        else:
+            messages.add_message(request, messages.ERROR, "Test configurations failed ! " + str(errors))
+
+    actions = [test_configurations]
+
+
 admin.site.register(Bro, BroAdmin)
 admin.site.register(SignatureBro, SignatureBroAdmin)
 admin.site.register(ScriptBro, ScriptBroAdmin)
 admin.site.register(RuleSetBro, RuleSetBroAdmin)
-admin.site.register(Configuration)
+admin.site.register(Configuration, ConfigurationAdmin)
