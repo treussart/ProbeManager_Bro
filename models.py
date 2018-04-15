@@ -90,15 +90,6 @@ class SignatureBro(Rule):
         return str(self.sid) + " : " + str(self.msg)
 
     @classmethod
-    def get_by_sid(cls, sid):
-        try:
-            obj = cls.objects.get(sid=sid)
-        except cls.DoesNotExist as e:
-            logger.debug('Tries to access an object that does not exist : ' + str(e))
-            return None
-        return obj
-
-    @classmethod
     def get_by_msg(cls, msg):
         try:
             obj = cls.objects.get(msg=msg)
@@ -113,7 +104,7 @@ class SignatureBro(Rule):
         return cls.objects.filter(rule_full__contains=pattern)
 
     @classmethod
-    def extract_signature_attributs(cls, line, rulesets=None):
+    def extract_signature_attributs(cls, line, rulesets=None):  # pragma: no cover
         getmsg = re.compile("event *\"(.*?)\"")
         try:
             match = getmsg.search(line)
@@ -220,7 +211,7 @@ class ScriptBro(Rule):
         return cls.objects.filter(rule_full__contains=pattern)
 
     @classmethod
-    def extract_script_attributs(cls, file, rulesets=None):  # TODO Not yet implemented
+    def extract_script_attributs(cls, file, rulesets=None):  # TODO Not yet implemented # pragma: no cover
         pass
 
     def test(self):
@@ -370,7 +361,7 @@ class Bro(Probe):
         tasks = {"start": command}
         try:
             response = execute(self.server, tasks, become=True)
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.exception("Error during start")
             return {'status': False, 'errors': "Error during start"}
         logger.debug("output : " + str(response))
@@ -384,7 +375,7 @@ class Bro(Probe):
         tasks = {"stop": command}
         try:
             response = execute(self.server, tasks, become=True)
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.exception("Error during stop")
             return {'status': False, 'errors': "Error during stop"}
         logger.debug("output : " + str(response))
@@ -399,12 +390,12 @@ class Bro(Probe):
             tasks = {"status": command}
             try:
                 response = execute(self.server, tasks, become=True)
-            except Exception:
+            except Exception:  # pragma: no cover
                 logger.exception('Failed to get status')
                 return 'Failed to get status'
             logger.debug("output : " + str(response))
             return response['status']
-        else:
+        else:  # pragma: no cover
             return " "
 
     def uptime(self):
@@ -418,7 +409,7 @@ class Bro(Probe):
         tasks = {"1_deploy": command}
         try:
             response = execute(self.server, tasks, become=True)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             print("output : " + str(e))
             logger.exception("Error during reload")
             return {'status': False, 'errors': "Error during reload"}
@@ -436,7 +427,7 @@ class Bro(Probe):
         tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
         try:
             response = execute(self.server, tasks, become=True)
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.exception("Error during restart")
             return {'status': False, 'errors': "Error during restart"}
         logger.debug("output : " + str(response))

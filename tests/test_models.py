@@ -74,6 +74,7 @@ class ScriptBroTest(TestCase):
         self.assertEqual(str(script_bro), "The hash value of a file transferred over HTTP matched")
         script_bro = ScriptBro.get_by_id(199)
         self.assertEqual(script_bro, None)
+        self.assertEqual(ScriptBro.get_by_name("101"), None)
         with self.assertRaises(AttributeError):
             script_bro.name
         with self.assertRaises(IntegrityError):
@@ -106,6 +107,7 @@ class SignatureBroTest(TestCase):
         self.assertEqual(str(signature_bro), "101 : Found root!")
         signature_bro = SignatureBro.get_by_id(199)
         self.assertEqual(signature_bro, None)
+        self.assertEqual(SignatureBro.get_by_msg("101"), None)
         with self.assertRaises(AttributeError):
             signature_bro.pk
         # with self.assertRaises(IntegrityError):
