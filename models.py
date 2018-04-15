@@ -117,7 +117,7 @@ class SignatureBro(Rule):
         with self.get_tmp_dir("test_sig") as tmp_dir:
             rule_file = tmp_dir + str(self.sid) + ".sig"
             with open(rule_file, 'w') as f:
-                f.write(self.rule_full)
+                f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-s', rule_file,
                    '-r', settings.BASE_DIR + "/bro/tests/data/test-signature.pcap"
@@ -126,7 +126,7 @@ class SignatureBro(Rule):
             (outdata, errdata) = process.communicate()
             logger.debug(outdata)
             # if success ok
-            if "Error in signature" in outdata:
+            if b"Error in signature" in outdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -135,7 +135,7 @@ class SignatureBro(Rule):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
             rule_file = tmp_dir + "signature.txt"
             with open(rule_file, 'w', encoding='utf_8') as f:
-                f.write(self.rule_full)
+                f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
                    '-s', rule_file
@@ -196,7 +196,7 @@ class ScriptBro(Rule):
         with self.get_tmp_dir("test_script") as tmp_dir:
             rule_file = tmp_dir + str(self.pk) + ".bro"
             with open(rule_file, 'w') as f:
-                f.write(self.rule_full)
+                f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-a',
                    rule_file
@@ -214,7 +214,7 @@ class ScriptBro(Rule):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
             rule_file = tmp_dir + "script.txt"
             with open(rule_file, 'w', encoding='utf_8') as f:
-                f.write(self.rule_full)
+                f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
                    rule_file

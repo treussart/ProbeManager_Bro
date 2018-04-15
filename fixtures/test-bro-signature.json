@@ -5,8 +5,7 @@
     "fields": {
         "rev": 0,
         "reference": null,
-        "rule_full": "signature windows_reverse_shell {\r\n  ip-proto == tcp\r\n  tcp-state established,originator\r\n  event \"ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)\"\r\n  payload /.*Microsoft Windows.*\\x28C\\x29 Copyright 1985-.*Microsoft Corp/\r\n}",
-        "enabled": true,
+        "rule_full": "signature my-first-sig {\r\n        ip-proto == tcp\r\n        dst-port == 80\r\n        payload /.*root/\r\n        event \"Found root!\"\r\n}",        "enabled": true,
         "created_date": "2018-04-12T18:45:20.197Z",
         "updated_date": "2018-04-12T18:45:20.197Z"
     }
@@ -15,7 +14,7 @@
     "model": "bro.signaturebro",
     "pk": 101,
     "fields": {
-        "msg": "ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)",
+        "msg": "Found root!",
         "pcap_success": ""
     }
 }
