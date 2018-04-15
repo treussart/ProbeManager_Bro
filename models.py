@@ -599,7 +599,8 @@ class Intel(CommonMixin, models.Model):
     @classmethod
     def import_from_csv(cls, csv_file):
         with open(csv_file, newline='') as file:
-            reader = csv.DictReader(file, fieldnames=['value', 'indicator', 'indicator_type', 'meta_source', 'meta_desc', 'meta_url'], delimiter=',')
+            reader = csv.DictReader(file, fieldnames=['value', 'indicator', 'indicator_type',
+                                                      'meta_source', 'meta_desc', 'meta_url'], delimiter=',')
             for row in reader:
                 cls.objects.create(value=row['value'],
                                    indicator=row['indicator'],
