@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 
-from bro.models import Bro, SignatureBro, RuleSetBro, ScriptBro
+from bro.models import Bro, ScriptBro
 
 
 class ViewsBroAdminTest(TestCase):
