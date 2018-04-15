@@ -110,7 +110,7 @@ class SignatureBro(Rule):
                         ruleset.signatures.add(signature)
                         ruleset.save()
                 return "rule saved : " + str(signature.sid)
-        except:
+        except Exception:
             return "rule not saved"
 
     def test(self):
@@ -294,7 +294,8 @@ class Bro(Probe):
             install_script = """
             if ! type /usr/local/bro/bin/bro ; then
                 apt update
-                apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates 
+                apt install -y cmake make gcc g++ flex bison libpcap-dev libssl1.0-dev python-dev swig zlib1g-dev \
+                libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates
                 wget https://www.bro.org/downloads/bro-${version}.tar.gz
                 tar xf bro-${version}.tar.gz
                 ( cd bro-${version} && ./configure )
@@ -382,7 +383,7 @@ class Bro(Probe):
             command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
-        tasks = {"1_deploy": command }
+        tasks = {"1_deploy": command}
         try:
             response = execute(self.server, tasks, become=True)
         except Exception as e:
