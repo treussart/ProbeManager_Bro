@@ -385,7 +385,8 @@ class Bro(Probe):
         tasks = {"1_deploy": command }
         try:
             response = execute(self.server, tasks, become=True)
-        except Exception:
+        except Exception as e:
+            print("output : " + str(e))
             logger.exception("Error during reload")
             return {'status': False, 'errors': "Error during reload"}
         logger.debug("output : " + str(response))

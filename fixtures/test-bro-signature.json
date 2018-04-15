@@ -5,7 +5,8 @@
     "fields": {
         "rev": 0,
         "reference": null,
-        "rule_full": "signature my-first-sig {\r\n        ip-proto == tcp\r\n        dst-port == 80\r\n        payload /.*root/\r\n        event \"Found root!\"\r\n}",        "enabled": true,
+        "rule_full": "signature my-first-sig {\r\n        ip-proto == tcp\r\n        dst-port == 80\r\n        payload /.*root/\r\n        event \"Found root!\"\r\n}",
+        "enabled": true,
         "created_date": "2018-04-12T18:45:20.197Z",
         "updated_date": "2018-04-12T18:45:20.197Z"
     }

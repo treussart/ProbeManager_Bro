@@ -69,7 +69,7 @@ class ScriptBroTest(TestCase):
         self.assertEqual(script_bro.rev, 0)
         self.assertEqual(script_bro.reference, None)
         self.assertTrue(script_bro.enabled)
-        script_bros = ScriptBro.find("Detect file downloads")
+        script_bros = ScriptBro.find("FTP brute-forcing detector")
         self.assertEqual(script_bros[0].name, "The hash value of a file transferred over HTTP matched")
         self.assertEqual(str(script_bro), "The hash value of a file transferred over HTTP matched")
         script_bro = ScriptBro.get_by_id(199)
@@ -96,20 +96,20 @@ class SignatureBroTest(TestCase):
     def test_signature_bro(self):
         all_signature_bro = SignatureBro.get_all()
         signature_bro = SignatureBro.get_by_id(101)
-        signature_bros = SignatureBro.find("ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)")
+        signature_bros = SignatureBro.find("Found root!")
         self.assertEqual(len(all_signature_bro), 1)
         self.assertEqual(signature_bro.rev, 0)
-        self.assertEqual(signature_bro.msg, "ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)")
+        self.assertEqual(signature_bro.msg, "Found root!")
         self.assertEqual(signature_bro.reference, None)
         self.assertTrue(signature_bro.enabled)
-        self.assertEqual(signature_bros[0].msg, "ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)")
-        self.assertEqual(str(signature_bro), "101 : ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)")
+        self.assertEqual(signature_bros[0].msg, "Found root!")
+        self.assertEqual(str(signature_bro), "101 : Found root!")
         signature_bro = SignatureBro.get_by_id(199)
         self.assertEqual(signature_bro, None)
         with self.assertRaises(AttributeError):
             signature_bro.pk
         with self.assertRaises(IntegrityError):
-            SignatureBro.objects.create(msg="ATTACK-RESPONSES Microsoft cmd.exe banner (reverse-shell originator)",
+            SignatureBro.objects.create(msg="Found root!",
                                         reference="",
                                         rule_full="test",
                                         enabled=True,
@@ -144,6 +144,11 @@ class BroTest(TestCase):
         self.assertTrue(response)
         response = bro.server.test_root()
         self.assertTrue(response)
+
+    def test_running(self):
+        bro = Bro.get_by_id(101)
+        response = bro.status()
+        self.assertIn('running', response)
 
     def test_reload(self):
         bro = Bro.get_by_id(101)
