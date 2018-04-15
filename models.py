@@ -4,7 +4,7 @@ import re
 import subprocess
 from collections import OrderedDict
 from string import Template
-from shutil import copyfile
+from shutil import copyfile, move
 
 import select2.fields
 from django.conf import settings
@@ -54,43 +54,21 @@ class Configuration(ProbeConfiguration):
     def test(self):
         with self.get_tmp_dir("test_conf") as tmp_dir:
             # deploy conf in local
-            broctl_cfg = tmp_dir + "broctl.cfg"
-            with open(broctl_cfg, 'w') as f:
-                f.write(self.broctl_cfg_text.replace('\r', ''))
-            copyfile(settings.BRO_CONFIG + "broctl.cfg", settings.BRO_CONFIG + "broctl.cfg.old")
-            copyfile(broctl_cfg, settings.BRO_CONFIG + "broctl.cfg")
-
-            node_cfg = tmp_dir + "node.cfg"
-            with open(node_cfg, 'w') as f:
-                f.write(self.node_cfg_text.replace('\r', ''))
-            copyfile(settings.BRO_CONFIG + "node.cfg", settings.BRO_CONFIG + "node.cfg.old")
-            copyfile(node_cfg, settings.BRO_CONFIG + "node.cfg")
-
             networks_cfg = tmp_dir + "networks.cfg"
             with open(networks_cfg, 'w') as f:
                 f.write(self.networks_cfg_text.replace('\r', ''))
             copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
             copyfile(networks_cfg, settings.BRO_CONFIG + "networks.cfg")
-
-            local_bro = tmp_dir + "local.bro"
-            with open(local_bro, 'w') as f:
-                f.write(self.local_bro_text.replace('\r', ''))
-            copyfile(settings.BRO_RULES + "site/local.bro", settings.BRO_RULES + "site/local.bro.old")
-            copyfile(local_bro, settings.BRO_RULES + "site/local.bro")
-
             cmd = [settings.BROCTL_BINARY,
                    'check'
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (outdata, errdata) = process.communicate()
-            logger.debug(outdata)
+            outdata, errdata = process.communicate()
+            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # remove deployed conf in local by default
-            copyfile(settings.BRO_CONFIG + "broctl.cfg.old", settings.BRO_CONFIG + "broctl.cfg")
-            copyfile(settings.BRO_CONFIG + "node.cfg.old", settings.BRO_CONFIG + "node.cfg")
-            copyfile(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
-            copyfile(settings.BRO_RULES + "site/local.bro.old", settings.BRO_RULES + "site/local.bro")
+            move(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
             # if success ok
-            if b"Error" in outdata:
+            if b"failed" in outdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -165,8 +143,8 @@ class SignatureBro(Rule):
                    '-r', settings.BASE_DIR + "/bro/tests/data/test-signature.pcap"
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (outdata, errdata) = process.communicate()
-            logger.debug(outdata)
+            outdata, errdata = process.communicate()
+            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # if success ok
             if b"Error in signature" in outdata:
                 return {'status': False, 'errors': errdata}
@@ -183,8 +161,8 @@ class SignatureBro(Rule):
                    '-s', rule_file
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (outdata, errdata) = process.communicate()
-            logger.debug(outdata)
+            outdata, errdata = process.communicate()
+            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             test = False
             if os.path.isfile(tmp_dir + "signatures.log"):
                 with open(tmp_dir + "signatures.log", "r", encoding='utf_8') as f:
@@ -245,8 +223,8 @@ class ScriptBro(Rule):
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (outdata, errdata) = process.communicate()
-            logger.debug(outdata)
+            outdata, errdata = process.communicate()
+            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # if success ok
             if b"error in " in outdata:
                 return {'status': False, 'errors': errdata}
@@ -264,8 +242,8 @@ class ScriptBro(Rule):
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (outdata, errdata) = process.communicate()
-            logger.debug(outdata)
+            outdata, errdata = process.communicate()
+            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             test = False
             if os.path.isfile(tmp_dir + "notice.log"):
                 with open(tmp_dir + "notice.log", "r", encoding='utf_8') as f:
