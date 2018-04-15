@@ -62,13 +62,14 @@ class Configuration(ProbeConfiguration):
             cmd = [settings.BROCTL_BINARY,
                    'check'
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       universal_newlines=True)
             outdata, errdata = process.communicate()
             logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # remove deployed conf in local by default
             move(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
             # if success ok
-            if b"failed" in outdata:
+            if "failed" in outdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -142,11 +143,12 @@ class SignatureBro(Rule):
                    '-s', rule_file,
                    '-r', settings.BASE_DIR + "/bro/tests/data/test-signature.pcap"
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       universal_newlines=True)
             outdata, errdata = process.communicate()
             logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # if success ok
-            if b"Error in signature" in outdata:
+            if "error" in outdata or "error" in errdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -222,11 +224,12 @@ class ScriptBro(Rule):
                    rule_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       universal_newlines=True)
             outdata, errdata = process.communicate()
             logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
             # if success ok
-            if b"error in " in outdata:
+            if "error" in outdata or "error" in errdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
