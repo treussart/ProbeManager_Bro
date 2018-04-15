@@ -3,10 +3,12 @@ import logging
 from django import forms
 from django.contrib import admin
 from django.contrib import messages
+from django.conf.urls import url
 from django.contrib.admin.helpers import ActionForm
 from django_celery_beat.models import PeriodicTask
 from .forms import BroChangeForm
-from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration
+from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel
+from core.utils import generic_import_csv
 from core.utils import create_deploy_rules_task, create_check_task
 
 logger = logging.getLogger(__name__)
@@ -260,8 +262,20 @@ class ConfigurationAdmin(admin.ModelAdmin):
     actions = [test_configurations]
 
 
+class IntelAdmin(admin.ModelAdmin):
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [url(r'^import_csv/$', self.import_csv, name="import_csv_intel"), ]
+        return my_urls + urls
+
+    def import_csv(self, request):
+        return generic_import_csv(Intel, request)
+
+
 admin.site.register(Bro, BroAdmin)
 admin.site.register(SignatureBro, SignatureBroAdmin)
 admin.site.register(ScriptBro, ScriptBroAdmin)
 admin.site.register(RuleSetBro, RuleSetBroAdmin)
 admin.site.register(Configuration, ConfigurationAdmin)
+admin.site.register(Intel, IntelAdmin)
