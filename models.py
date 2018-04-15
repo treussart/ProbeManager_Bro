@@ -205,7 +205,7 @@ class ScriptBro(Rule):
             (outdata, errdata) = process.communicate()
             logger.debug(outdata)
             # if success ok
-            if "error in " in outdata:
+            if b"error in " in outdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -302,6 +302,7 @@ class Bro(Probe):
                 export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/
                 echo "export PATH=/usr/local/bro/bin:$PATH" >> .bashrc
                 echo "export LD_LIBRARY_PATH=/usr/local/bro/lib/" >> .bashrc
+                /usr/local/bro/bin/broctl deploy
                 exit 0
             else
                 echo "Already installed"
@@ -379,7 +380,7 @@ class Bro(Probe):
             command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
-        tasks = {"reload": command}
+        tasks = {"1_deploy": command }
         try:
             response = execute(self.server, tasks, become=True)
         except Exception:
@@ -391,11 +392,11 @@ class Bro(Probe):
     def restart(self):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command1 = self.configuration.bin_directory + "broctl stop"
-            command2 = self.configuration.bin_directory + "broctl start"
+            command2 = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks_unordered = {"1_stop": command1,
-                           "2_start": command2}
+                           "3_deploy": command2}
         tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
         try:
             response = execute(self.server, tasks, become=True)
@@ -433,10 +434,10 @@ class Bro(Probe):
         for ruleset in self.rulesets.all():
             for signature in ruleset.signatures.all():
                 if signature.enabled:
-                    value_signatures += signature.rule_full + os.linesep
+                    value_signatures += signature.rule_full + '\n'
             for script in ruleset.scripts.all():
                 if script.enabled:
-                    value_scripts += script.rule_full + os.linesep
+                    value_scripts += script.rule_full + '\n'
         with self.get_tmp_dir(self.pk) as tmp_dir:
             with open(tmp_dir + "signatures.txt", 'w', encoding='utf_8') as f:
                 f.write(value_signatures.replace('\r', ''))
@@ -489,6 +490,7 @@ class Bro(Probe):
                                         dest=self.configuration.networks_cfg, become=True)
                 response = execute_copy(self.server, src=os.path.abspath(tmp_dir + 'local_bro.conf'),
                                         dest=self.configuration.local_bro, become=True)
+                self.reload()
             except Exception as e:
                 logger.exception('deploy conf failed')
                 deploy = False
