@@ -69,7 +69,7 @@ if [ -f /etc/debian_version ]; then
 fi
 
 if ! type bro ; then
-    exit 2
+    exit 1
 fi
 
 which bro
