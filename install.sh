@@ -25,9 +25,10 @@ if [ -f /etc/debian_version ]; then
     if ! type bro ; then
         # Ubuntu
         if [[ "$TRAVIS" = true ]]; then
-            sudo sh -c "echo 'deb http://download.opensuse.org/repositories/network:/bro/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/bro.list"
-            sudo apt update
-            sudo apt -y install bro
+            curl http://download.opensuse.org/repositories/network:bro/xUbuntu_14.04/Release.key | sudo apt-key add -
+            echo "deb http://download.opensuse.org/repositories/network:/bro/xUbuntu_14.04/ /" | sudo tee -a /etc/apt/sources.list
+            sudo apt-get update -qq
+            sudo apt-get -y install bro
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
@@ -68,7 +69,7 @@ if [ -f /etc/debian_version ]; then
 fi
 
 if ! type bro ; then
-    exit 1
+    exit 2
 fi
 
 which bro
