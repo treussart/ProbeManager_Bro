@@ -2,8 +2,9 @@
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
+from django.conf import settings
 
-from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro
+from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel
 
 
 class ConfigurationTest(TestCase):
@@ -170,3 +171,32 @@ class BroTest(TestCase):
         self.assertTrue(response['status'])
         response = bro.reload()
         self.assertTrue(response['status'])
+
+
+class IntelTest(TestCase):
+    fixtures = ['init', 'crontab', 'test-core-secrets', 'test-bro-signature', 'test-bro-script', 'test-bro-ruleset',
+                'test-bro-conf', 'test-bro-bro', 'test-bro-intel']
+
+    @classmethod
+    def setUpTestData(cls):
+        pass
+
+    def test_intel(self):
+        self.assertEqual(len(Intel.get_all()), 2)
+        intel = Intel.get_by_id(1)
+        self.assertEqual(intel.value, "192.168.50.110")
+        self.assertEqual(str(intel), "Intel::ADDR-192.168.50.110")
+        with Intel.get_tmp_dir() as tmp_dir:
+            self.assertEqual(Intel.store(tmp_dir), tmp_dir + "intel-1.dat")
+        self.assertEqual(Intel.deploy(Bro.get_by_id(101)), {'status': True})
+        Intel.import_from_csv(settings.BASE_DIR + '/bro/tests/data/test-intel.csv')
+        self.assertEqual(len(Intel.get_all()), 4)
+        self.assertEqual(str(Intel.get_by_id(3)), 'Intel::ADDR-10.110.56.45')
+        Intel.get_by_id(3).delete()
+        Intel.get_by_id(4).delete()
+        intel = Intel.get_by_id(99)
+        self.assertEqual(intel, None)
+        with self.assertRaises(AttributeError):
+            intel.value
+        with self.assertRaises(IntegrityError):
+            Intel.objects.create(value="192.168.50.110", indicator="Intel::ADDR")
