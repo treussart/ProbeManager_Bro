@@ -28,7 +28,7 @@ if [ -f /etc/debian_version ]; then
             curl http://download.opensuse.org/repositories/network:bro/xUbuntu_14.04/Release.key | sudo apt-key add -
             echo "deb http://download.opensuse.org/repositories/network:/bro/xUbuntu_14.04/ /" | sudo tee -a /etc/apt/sources.list
             sudo apt-get update -qq
-            sudo apt-get -y install bro
+            sudo apt-get -y --allow-unauthenticated install bro
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
