@@ -32,9 +32,8 @@ if [ -f /etc/debian_version ]; then
             export PATH=/opt/bro/bin:$PATH && export LD_LIBRARY_PATH=/opt/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
-            sudo chown -R $(whoami) /usr/local/bro/etc/
-            sudo chown -R $(whoami) /etc/bro/site/
-            ls /opt/bro/share/bro
+            sudo chown -R $(whoami) /opt/bro/etc/
+            sudo chown -R $(whoami) /opt/bro/share/bro/site/
             config="/opt/bro/etc/"
             rules="/opt/bro/share/bro/"
         elif [[ $( cat /etc/issue ) == *"Ubuntu"* ]]; then
