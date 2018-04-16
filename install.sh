@@ -25,6 +25,9 @@ if [ -f /etc/debian_version ]; then
     if ! type bro ; then
         # Ubuntu
         if [[ $( cat /etc/issue ) == *"Ubuntu"* ]]; then
+            locate python3.5m
+            locate libpython3.5m
+            export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
             sudo apt update
             sudo apt install cmake make gcc g++ flex bison libpcap-dev libssl-dev python-dev swig zlib1g-dev libmagic-dev libgeoip-dev sendmail libcap2-bin wget curl ca-certificates
             wget https://www.bro.org/downloads/bro-"$BRO_VERSION".tar.gz
