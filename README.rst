@@ -35,9 +35,9 @@ Features
  * Install and update Bro NIDS on a remote server.
  * Configure the settings and test the configuration.
  * Add, Delete, Update scripts and signatures.
- * Tests signatures compliance.
- * Tests signatures if generates alert via Pcap.
- * Adding signatures via HTTP or via criticalStack.
+ * Tests signatures and scripts compliance.
+ * Tests signatures and scripts if generates notice via Pcap.
+ * Adding intel type (IP, URL, Domain ...) possibility to import them in csv format.
  * Grouping rules into groups and assign this to probes.
 
 
