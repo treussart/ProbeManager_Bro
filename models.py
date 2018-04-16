@@ -71,7 +71,7 @@ class Configuration(ProbeConfiguration):
             # remove deployed conf in local by default
             move(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
             # if success ok
-            if "failed" in outdata:
+            if "failed" in outdata or "failed" in errdata:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
