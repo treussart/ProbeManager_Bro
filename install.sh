@@ -23,7 +23,6 @@ if [[ $OSTYPE == *"darwin"* ]]; then
 fi
 if [ -f /etc/debian_version ]; then
     if ! type bro ; then
-        cat /etc/issue
         # Ubuntu
         if [[ $( cat /etc/issue ) == *"Ubuntu"* ]]; then
             sudo apt update
@@ -33,7 +32,7 @@ if [ -f /etc/debian_version ]; then
             ( cd bro-"$BRO_VERSION" && ./configure )
             ( cd bro-"$BRO_VERSION" && make -j$(nproc)  )
             ( cd bro-"$BRO_VERSION" && sudo make install )
-            rm bro-"$BRO_VERSION".tar.gz && rm -rf bro-"$BRO_VERSION"
+            rm bro-"$BRO_VERSION".tar.gz && sudo rm -rf bro-"$BRO_VERSION"
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
@@ -47,7 +46,7 @@ if [ -f /etc/debian_version ]; then
             ( cd bro-"$BRO_VERSION" && ./configure )
             ( cd bro-"$BRO_VERSION" && make -j$(nproc)  )
             ( cd bro-"$BRO_VERSION" && sudo make install )
-            rm bro-"$BRO_VERSION".tar.gz && rm -rf bro-"$BRO_VERSION"
+            rm bro-"$BRO_VERSION".tar.gz && sudo rm -rf bro-"$BRO_VERSION"
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
