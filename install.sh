@@ -29,8 +29,11 @@ if [ -f /etc/debian_version ]; then
             echo "deb http://download.opensuse.org/repositories/network:/bro/xUbuntu_14.04/ /" | sudo tee -a /etc/apt/sources.list
             sudo apt-get update -qq
             sudo apt-get -y --allow-unauthenticated install bro
-            sudo find /usr -name broctl
+            sudo find /usr -name bro
             sudo find /etc -name bro
+            sudo find / -name bro
+            sudo find / -name local.bro
+            sudo find / -name networks.cfg
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
             sudo chown $(whoami) $( which bro )
