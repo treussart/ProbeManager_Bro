@@ -71,7 +71,7 @@ class Configuration(ProbeConfiguration):
             # remove deployed conf in local by default
             move(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
             # if success ok
-            if "failed" in outdata or "failed" in errdata:
+            if "failed" in outdata or process.returncode != 0:
                 return {'status': False, 'errors': errdata}
             else:
                 return {'status': True}
@@ -106,7 +106,7 @@ class SignatureBro(Rule):
         return cls.objects.filter(rule_full__contains=pattern)
 
     @classmethod
-    def extract_signature_attributs(cls, line, rulesets=None):  # pragma: no cover
+    def extract_attributs(cls, line, rulesets=None):  # pragma: no cover TODO
         getmsg = re.compile("event *\"(.*?)\"")
         try:
             match = getmsg.search(line)
@@ -213,7 +213,7 @@ class ScriptBro(Rule):
         return cls.objects.filter(rule_full__contains=pattern)
 
     @classmethod
-    def extract_script_attributs(cls, file, rulesets=None):  # TODO Not yet implemented # pragma: no cover
+    def extract_attributs(cls, file, rulesets=None):  # TODO Not yet implemented # pragma: no cover
         pass
 
     def test(self):
