@@ -338,7 +338,7 @@ class Bro(Probe):
             fi
             """
             t = Template(install_script)
-            command = "sh -c '" + t.substitute(version=version) + "'"
+            command = "sh -c '" + t.safe_substitute(version=version) + "'"
         else:
             raise Exception("Not yet implemented")
         tasks = {"install": command}
@@ -474,7 +474,7 @@ class Bro(Probe):
                 response = execute_copy(self.server, src=tmp_dir + 'signatures.txt',
                                         dest=self.configuration.my_signatures,
                                         become=True)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception('excecute_copy failed')
                 deploy = False
                 errors.append(str(e))
@@ -484,7 +484,7 @@ class Bro(Probe):
                 response = execute_copy(self.server, src=tmp_dir + 'scripts.txt',
                                         dest=self.configuration.my_scripts,
                                         become=True)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception('excecute_copy failed')
                 deploy = False
                 errors.append(str(e))
@@ -494,7 +494,7 @@ class Bro(Probe):
             self.rules_updated_date = timezone.now()
             self.save()
             return {"status": deploy}
-        else:
+        else:  # pragma: no cover
             return {'status': deploy, 'errors': errors}
 
     def deploy_conf(self):

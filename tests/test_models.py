@@ -3,6 +3,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 from django.conf import settings
+from django.db import transaction
 
 from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel
 
@@ -111,13 +112,6 @@ class SignatureBroTest(TestCase):
         self.assertEqual(SignatureBro.get_by_msg("101"), None)
         with self.assertRaises(AttributeError):
             signature_bro.pk
-        # with self.assertRaises(IntegrityError):
-        #     SignatureBro.objects.create(msg="Found root!",
-        #                                 reference="",
-        #                                 rule_full="test",
-        #                                 enabled=True,
-        #                                 created_date=self.date_now
-        #                                 )
 
 
 class BroTest(TestCase):
@@ -126,7 +120,7 @@ class BroTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        pass
+        cls.date_now = timezone.now()
 
     def test_bro(self):
         all_bro = Bro.get_all()
@@ -171,6 +165,29 @@ class BroTest(TestCase):
         self.assertTrue(response['status'])
         response = bro.reload()
         self.assertTrue(response['status'])
+
+    def test_install(self):
+        bro = Bro.get_by_id(101)
+        response = bro.install()
+        self.assertTrue(response['status'])
+
+    def test_update(self):
+        bro = Bro.get_by_id(101)
+        response = bro.update()
+        self.assertTrue(response['status'])
+
+    def test_test_rules(self):
+        bro = Bro.get_by_id(101)
+        response = bro.test_rules()
+        self.assertTrue(response['status'])
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                signature_failed = SignatureBro.objects.create(msg="Found root!",
+                                                               reference="",
+                                                               rule_full="test",
+                                                               enabled=True,
+                                                               created_date=self.date_now
+                                                               )
 
 
 class IntelTest(TestCase):
