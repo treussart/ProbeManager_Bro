@@ -25,8 +25,6 @@ class ConfigurationTest(TestCase):
         self.assertEqual(str(conf_bro), "test_bro_conf")
         conf_bro = Configuration.get_by_id(199)
         self.assertEqual(conf_bro, None)
-        with self.assertRaises(AttributeError):
-            conf_bro.name
         with self.assertRaises(IntegrityError):
             Configuration.objects.create(name="test_bro_conf")
 
@@ -47,8 +45,6 @@ class RuleSetBroTest(TestCase):
         self.assertEqual(str(ruleset_bro), "test_bro_ruleset")
         ruleset_bro = RuleSetBro.get_by_id(199)
         self.assertEqual(ruleset_bro, None)
-        with self.assertRaises(AttributeError):
-            ruleset_bro.name
         with self.assertRaises(IntegrityError):
             RuleSetBro.objects.create(name="test_bro_ruleset",
                                            description="",
@@ -77,8 +73,6 @@ class ScriptBroTest(TestCase):
         script_bro = ScriptBro.get_by_id(199)
         self.assertEqual(script_bro, None)
         self.assertEqual(ScriptBro.get_by_name("101"), None)
-        with self.assertRaises(AttributeError):
-            script_bro.name
         with self.assertRaises(IntegrityError):
             ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
                                      rev=0,
@@ -110,8 +104,6 @@ class SignatureBroTest(TestCase):
         signature_bro = SignatureBro.get_by_id(199)
         self.assertEqual(signature_bro, None)
         self.assertEqual(SignatureBro.get_by_msg("101"), None)
-        with self.assertRaises(AttributeError):
-            signature_bro.pk
 
 
 class BroTest(TestCase):
@@ -130,8 +122,6 @@ class BroTest(TestCase):
         self.assertEqual(str(bro), "test_instance_bro : ")
         bro = Bro.get_by_id(199)
         self.assertEqual(bro, None)
-        with self.assertRaises(AttributeError):
-            bro.name
         with self.assertRaises(IntegrityError):
             Bro.objects.create(name="test_instance_bro")
 
@@ -213,7 +203,5 @@ class IntelTest(TestCase):
         Intel.get_by_id(4).delete()
         intel = Intel.get_by_id(99)
         self.assertEqual(intel, None)
-        with self.assertRaises(AttributeError):
-            intel.value
         with self.assertRaises(IntegrityError):
             Intel.objects.create(value="192.168.50.110", indicator="Intel::ADDR")
