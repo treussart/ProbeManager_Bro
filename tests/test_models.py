@@ -172,12 +172,12 @@ class BroTest(TestCase):
         self.assertTrue(response['status'])
         with transaction.atomic():
             with self.assertRaises(IntegrityError):
-                signature_failed = SignatureBro.objects.create(msg="Found root!",
-                                                               reference="",
-                                                               rule_full="test",
-                                                               enabled=True,
-                                                               created_date=self.date_now
-                                                               )
+                SignatureBro.objects.create(msg="Found root!",
+                                            reference="",
+                                            rule_full="test",
+                                            enabled=True,
+                                            created_date=self.date_now
+                                            )
 
 
 class IntelTest(TestCase):
