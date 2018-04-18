@@ -339,14 +339,14 @@ class Bro(Probe):
             """
             t = Template(install_script)
             command = "sh -c '" + t.safe_substitute(version=version) + "'"
-        else:
+        else:  # pragma: no cover
             raise Exception("Not yet implemented")
         tasks = {"install": command}
         try:
             response = execute(self.server, tasks, become=True)
             self.installed = True
             self.save()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.exception('install failed')
             return {'status': False, 'errors': str(e)}
         logger.debug("output : " + str(response))
@@ -522,14 +522,14 @@ class Bro(Probe):
                 response = execute_copy(self.server, src=os.path.abspath(settings.BASE_DIR + '/bro/default-intel.bro'),
                                         dest=self.configuration.policydir + 'site/intel.bro', become=True)
                 self.reload()
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.exception('deploy conf failed')
                 deploy = False
                 errors.append(str(e))
             logger.debug("output : " + str(response))
         if deploy:
             return {'status': deploy}
-        else:
+        else:  # pragma: no cover
             return {'status': deploy, 'errors': errors}
 
 
