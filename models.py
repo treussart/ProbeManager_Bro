@@ -587,13 +587,13 @@ class Intel(CommonMixin, models.Model):
                                         dest=bro_instance.configuration.policydir + 'site/' +
                                                                                     os.path.basename(intel_file),
                                         become=True)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.exception('excecute_copy failed')
             deploy = False
             errors = str(e)
         if deploy:
             return {'status': deploy}
-        else:
+        else:  # pragma: no cover
             return {'status': deploy, 'errors': errors + ' - ' + str(response)}
 
     @classmethod
