@@ -13,6 +13,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+from core.utils import process_cmd
 from core.models import Probe, ProbeConfiguration
 from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
@@ -64,17 +65,10 @@ class Configuration(ProbeConfiguration):
             cmd = [settings.BROCTL_BINARY,
                    'check'
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       universal_newlines=True)
-            outdata, errdata = process.communicate()
-            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
+            response = process_cmd(cmd, tmp_dir, "failed")
             # remove deployed conf in local by default
             move(settings.BRO_CONFIG + "networks.cfg.old", settings.BRO_CONFIG + "networks.cfg")
-            # if success ok
-            if "failed" in outdata or process.returncode != 0:
-                return {'status': False, 'errors': errdata}
-            else:
-                return {'status': True}
+            return response
 
 
 class SignatureBro(Rule):
@@ -136,15 +130,7 @@ class SignatureBro(Rule):
                    '-s', rule_file,
                    '-r', settings.BASE_DIR + "/bro/tests/data/test-signature.pcap"
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       universal_newlines=True)
-            outdata, errdata = process.communicate()
-            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
-            # if success ok
-            if "error" in outdata or "error" in errdata:
-                return {'status': False, 'errors': errdata}
-            else:
-                return {'status': True}
+            return process_cmd(cmd, tmp_dir, "error")
 
     def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
@@ -226,15 +212,7 @@ class ScriptBro(Rule):
                    rule_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       universal_newlines=True)
-            outdata, errdata = process.communicate()
-            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
-            # if success ok
-            if "error" in outdata or "error" in errdata:
-                return {'status': False, 'errors': errdata}
-            else:
-                return {'status': True}
+            return process_cmd(cmd, tmp_dir, "error")
 
     def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
