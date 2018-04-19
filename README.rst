@@ -5,11 +5,11 @@ Bro for Probe Manager
 
 |Licence| |Version|
 
-.. image:: https://api.codacy.com/project/badge/Grade/f5e3cb111fc949d08287c36ce4fa5798?branch=develop
+.. image:: https://api.codacy.com/project/badge/Grade/f5e3cb111fc949d08287c36ce4fa5798?branch=master
    :alt: Codacy Badge
    :target: https://www.codacy.com/app/treussart/ProbeManager_Bro?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=treussart/ProbeManager_Bro&amp;utm_campaign=Badge_Grade
 
-.. image:: https://api.codacy.com/project/badge/Grade/f5e3cb111fc949d08287c36ce4fa5798?branch=develop
+.. image:: https://api.codacy.com/project/badge/Grade/f5e3cb111fc949d08287c36ce4fa5798?branch=master
    :alt: Codacy Coverage
    :target: https://www.codacy.com/app/treussart/ProbeManager_Bro?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=treussart/ProbeManager_Bro&amp;utm_campaign=Badge_Coverage
 
