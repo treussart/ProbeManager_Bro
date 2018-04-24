@@ -318,7 +318,7 @@ class Bro(Probe):
             t = Template(install_script)
             command = "sh -c '" + t.safe_substitute(version=version) + "'"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"install": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -337,7 +337,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"start": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -351,7 +351,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl stop"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"stop": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -366,7 +366,7 @@ class Bro(Probe):
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
                 command = self.configuration.bin_directory + "broctl status | sed -n 2p"
             else:  # pragma: no cover
-                raise Exception("Not yet implemented")
+                raise NotImplementedError
             tasks = {"status": command}
             try:
                 response = execute(self.server, tasks, become=True)
@@ -385,7 +385,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"1_deploy": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -401,7 +401,7 @@ class Bro(Probe):
             command1 = self.configuration.bin_directory + "broctl stop"
             command2 = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks_unordered = {"1_stop": command1,
                            "3_deploy": command2}
         tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
