@@ -46,9 +46,15 @@ if [ -f /etc/debian_version ]; then
             rm bro-"$BRO_VERSION".tar.gz && sudo rm -rf bro-"$BRO_VERSION"
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
-            sudo chown $(whoami) $( which bro )
-            sudo chown -R $(whoami) /usr/local/bro
-            sudo chown -R $(whoami) /etc/bro
+            if [[ "$arg" = 'prod' ]]; then
+                sudo chown www-data:$(whoami) $( which bro )
+                sudo chown -R www-data:$(whoami) /usr/local/bro
+                sudo chown -R www-data:$(whoami) /etc/bro
+            else
+                sudo chown $(whoami) $( which bro )
+                sudo chown -R $(whoami) /usr/local/bro
+                sudo chown -R $(whoami) /etc/bro
+            fi
             config="/usr/local/bro/etc/"
             rules="/etc/bro/"
         fi
