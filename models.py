@@ -60,7 +60,8 @@ class Configuration(ProbeConfiguration):
             networks_cfg = tmp_dir + "networks.cfg"
             with open(networks_cfg, 'w') as f:
                 f.write(self.networks_cfg_text.replace('\r', ''))
-            copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
+            if os.path.exists(settings.BRO_CONFIG + "networks.cfg"):
+                copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
             copyfile(networks_cfg, settings.BRO_CONFIG + "networks.cfg")
             cmd = [settings.BROCTL_BINARY,
                    'check'
