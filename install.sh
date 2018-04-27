@@ -31,8 +31,10 @@ if [ -f /etc/debian_version ]; then
             sudo apt-get -y --allow-unauthenticated install bro
             export PATH=/opt/bro/bin:$PATH && export LD_LIBRARY_PATH=/opt/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
-            sudo chown "$CURRENT_USER" $( which bro )
-            sudo chown -R "$CURRENT_USER" /opt/bro
+            sudo chown "$SERVER_USER":"$CURRENT_USER" $( which bro )
+            sudo chown -R "$SERVER_USER":"$CURRENT_USER" /opt/bro
+            sudo chmod -R 750 /opt/bro
+            sudo chmod 750 $( which bro )
             config="/opt/bro/etc/"
             rules="/opt/bro/share/bro/"
         else # Debian and ubuntu
@@ -50,6 +52,9 @@ if [ -f /etc/debian_version ]; then
                 sudo chown "$SERVER_USER":"$CURRENT_USER" $( which bro )
                 sudo chown -R "$SERVER_USER":"$CURRENT_USER" /usr/local/bro
                 sudo chown -R "$SERVER_USER":"$CURRENT_USER" /etc/bro
+                sudo chmod -R 750 /etc/bro
+                sudo chmod -R 750 /usr/local/bro
+                sudo chmod 750 $( which bro )
             else
                 sudo chown "$CURRENT_USER" $( which bro )
                 sudo chown -R "$CURRENT_USER" /usr/local/bro
