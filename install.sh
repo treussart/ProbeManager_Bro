@@ -20,8 +20,7 @@ if [[ $OSTYPE == *"darwin"* ]]; then
         config="/usr/local/etc/"
         rules="/usr/local/opt/bro/share/bro/"
     fi
-fi
-if [ -f /etc/debian_version ]; then   
+elif [ -f /etc/debian_version ]; then
     # Ubuntu
     if [[ "$TRAVIS" = true ]]; then
         if ! type bro ; then
