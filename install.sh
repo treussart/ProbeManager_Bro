@@ -50,6 +50,10 @@ elif [ -f /etc/debian_version ]; then
             export PATH=/usr/local/bro/bin:$PATH && export LD_LIBRARY_PATH=/usr/local/bro/lib/:$LD_LIBRARY_PATH
             sudo setcap cap_net_raw,cap_net_admin=eip $( which bro )
         fi
+        if ! type critical-stack-intel ; then
+            curl --silent https://packagecloud.io/install/repositories/criticalstack/critical-stack-intel/script.deb.sh | sudo bash
+            sudo apt-get install critical-stack-intel
+        fi
         if [[ "$arg" = 'prod' ]]; then
                 sudo chown "$SERVER_USER":"$CURRENT_USER" $( which bro )
                 sudo chown -R "$SERVER_USER":"$CURRENT_USER" /usr/local/bro

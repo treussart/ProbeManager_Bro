@@ -12,6 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django_celery_beat.models import CrontabSchedule
 
 from core.utils import process_cmd
 from core.models import Probe, ProbeConfiguration
@@ -60,7 +61,8 @@ class Configuration(ProbeConfiguration):
             networks_cfg = tmp_dir + "networks.cfg"
             with open(networks_cfg, 'w') as f:
                 f.write(self.networks_cfg_text.replace('\r', ''))
-            copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
+            if os.path.exists(settings.BRO_CONFIG + "networks.cfg"):
+                copyfile(settings.BRO_CONFIG + "networks.cfg", settings.BRO_CONFIG + "networks.cfg.old")
             copyfile(networks_cfg, settings.BRO_CONFIG + "networks.cfg")
             cmd = [settings.BROCTL_BINARY,
                    'check'
@@ -318,7 +320,7 @@ class Bro(Probe):
             t = Template(install_script)
             command = "sh -c '" + t.safe_substitute(version=version) + "'"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"install": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -337,7 +339,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl start"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"start": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -351,7 +353,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl stop"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"stop": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -366,7 +368,7 @@ class Bro(Probe):
             if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
                 command = self.configuration.bin_directory + "broctl status | sed -n 2p"
             else:  # pragma: no cover
-                raise Exception("Not yet implemented")
+                raise NotImplementedError
             tasks = {"status": command}
             try:
                 response = execute(self.server, tasks, become=True)
@@ -385,7 +387,7 @@ class Bro(Probe):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             command = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks = {"1_deploy": command}
         try:
             response = execute(self.server, tasks, become=True)
@@ -401,7 +403,7 @@ class Bro(Probe):
             command1 = self.configuration.bin_directory + "broctl stop"
             command2 = self.configuration.bin_directory + "broctl deploy"
         else:  # pragma: no cover
-            raise Exception("Not yet implemented")
+            raise NotImplementedError
         tasks_unordered = {"1_stop": command1,
                            "3_deploy": command2}
         tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
@@ -586,3 +588,42 @@ class Intel(CommonMixin, models.Model):
                                    meta_source=row['meta_source'],
                                    meta_desc=row['meta_desc'],
                                    meta_url=row['meta_url'],)
+
+
+class CriticalStack(models.Model):
+    api_key = models.CharField(max_length=300, null=False, blank=False, unique=True)
+    scheduled_pull = models.ForeignKey(CrontabSchedule, related_name='crontabschedule_pull', blank=False,
+                                       null=False, on_delete=models.CASCADE)
+    bro = models.ForeignKey(Bro, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id) + "-" + str(self.bro)
+
+    def deploy(self):
+        command1 = "critical-stack-intel api " + str(self.api_key)
+        command2 = "critical-stack-intel config --set bro.restart=true"
+        command3 = "critical-stack-intel pull"
+        tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
+        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+        try:
+            response = execute(self.bro.server, tasks, become=True)
+        except Exception as e:  # pragma: no cover
+            logger.exception('deploy failed')
+            return {'status': False, 'errors': str(e)}
+        else:
+            logger.debug("output : " + str(response))
+            return {'status': True}
+
+    def list(self):
+        command1 = "critical-stack-intel api " + str(self.api_key)
+        command2 = "critical-stack-intel list"
+        tasks_unordered = {"1_set_api": command1, "2_list": command2}
+        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+        try:
+            response = execute(self.bro.server, tasks, become=True)
+        except Exception as e:  # pragma: no cover
+            logger.exception('list failed')
+            return {'status': False, 'errors': str(e)}
+        else:
+            logger.debug("output : " + str(response))
+            return {'status': True, 'message': response['2_list']}
