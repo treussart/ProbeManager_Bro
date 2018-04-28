@@ -52,11 +52,12 @@ class ViewsBroAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('was added successfully', str(response.content))
         self.assertIn('Test script failed', str(response.content))
-        response = self.client.post('/admin/bro/rulesetbro/101/change/', {'name': 'test',
-                                                                   'description': 'test fail',
-                                                                   'signatures': 101,
-                                                                   'scripts': ScriptBro.get_by_name('fail script test').id
-                                                                   },
+        response = self.client.post('/admin/bro/rulesetbro/101/change/',
+                                    {'name': 'test',
+                                     'description': 'test fail',
+                                     'signatures': 101,
+                                     'scripts': ScriptBro.get_by_name('fail script test').id
+                                     },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         response = self.client.post('/admin/bro/bro/', {'action': 'test_rules',
@@ -64,8 +65,6 @@ class ViewsBroAdminTest(TestCase):
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test rules failed', str(response.content))
-
-
 
         self.assertTrue(Bro.get_by_name('test').installed)
         response = self.client.post('/admin/bro/bro/' + str(Bro.get_by_name('test').id) + '/change/',
@@ -82,8 +81,9 @@ class ViewsBroAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(' was changed successfully', str(response.content))
         self.assertFalse(Bro.get_by_name('test').installed)
-        response = self.client.post('/admin/bro/bro/', {'action': 'delete_bro', '_selected_action': Bro.get_by_name('test').id},
-                                    follow=True)
+        response = self.client.post('/admin/bro/bro/',
+                                    {'action': 'delete_bro',
+                                     '_selected_action': Bro.get_by_name('test').id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("Bro instance test deleted", str(response.content))
         self.assertEqual(len(Bro.get_all()), 1)
@@ -109,4 +109,3 @@ class ViewsBroAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Bro instance test deleted", str(response.content))
         self.assertEqual(len(Bro.get_all()), 1)
-

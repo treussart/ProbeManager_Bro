@@ -2,9 +2,9 @@
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
+from django_celery_beat.models import PeriodicTask
 
-from bro.models import CriticalStack, Bro
+from bro.models import CriticalStack
 
 
 class ViewsCriticalStackAdminTest(TestCase):
