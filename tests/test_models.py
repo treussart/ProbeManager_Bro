@@ -220,7 +220,7 @@ class CriticalStackTest(TestCase):
         self.assertEqual(str(critical_stack), "1-test_instance_bro : ")
         self.assertTrue(critical_stack.deploy()['status'])
         self.assertTrue(critical_stack.list()['status'])
-        self.assertIn('', critical_stack.list()['message'])
+        self.assertIn('Pulling feed list from the Intel Marketplace.', critical_stack.list()['message'])
         with self.assertRaises(IntegrityError):
             CriticalStack.objects.create(api_key=critical_stack.api_key,
                                          scheduled_pull=critical_stack.scheduled_pull,

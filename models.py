@@ -626,4 +626,4 @@ class CriticalStack(models.Model):
             return {'status': False, 'errors': str(e)}
         else:
             logger.debug("output : " + str(response))
-            return {'status': True, 'message': str(response)}
+            return {'status': True, 'message': response['2_list']}
