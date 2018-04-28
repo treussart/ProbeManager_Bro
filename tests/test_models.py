@@ -47,9 +47,9 @@ class RuleSetBroTest(TestCase):
         self.assertEqual(ruleset_bro, None)
         with self.assertRaises(IntegrityError):
             RuleSetBro.objects.create(name="test_bro_ruleset",
-                                           description="",
-                                           created_date=self.date_now
-                                           )
+                                      description="",
+                                      created_date=self.date_now
+                                      )
 
 
 class ScriptBroTest(TestCase):

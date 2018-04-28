@@ -98,35 +98,40 @@ class ViewsSignatureAdminTest(TestCase):
                                      'ruleset': RuleSetBro.get_by_name('test_bro_ruleset').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(SignatureBro.get_by_msg('fail test'), RuleSetBro.get_by_name('test_bro_ruleset').signatures.all())
+        self.assertNotIn(SignatureBro.get_by_msg('fail test'),
+                         RuleSetBro.get_by_name('test_bro_ruleset').signatures.all())
 
-        response = self.client.post('/admin/bro/signaturebro/', {'action': 'delete_selected',
-                                                                 '_selected_action': SignatureBro.get_by_msg('fail test').id},
+        response = self.client.post('/admin/bro/signaturebro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': SignatureBro.get_by_msg('fail test').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Are you sure you want to delete the selected ', str(response.content))
-        response = self.client.post('/admin/bro/signaturebro/', {'action': 'delete_selected',
-                                                                 '_selected_action': SignatureBro.get_by_msg('fail test').id,
-                                                                 'post': 'yes'},
+        response = self.client.post('/admin/bro/signaturebro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': SignatureBro.get_by_msg('fail test').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 1)
-        response = self.client.post('/admin/bro/signaturebro/', {'action': 'delete_selected',
-                                                                 '_selected_action': SignatureBro.get_by_msg('Found root!').id,
-                                                                 'post': 'yes'},
+        response = self.client.post('/admin/bro/signaturebro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': SignatureBro.get_by_msg('Found root!').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 0)
         with open(settings.BASE_DIR + '/bro/tests/data/test-signature.pcap', 'rb') as f:
             with open(settings.BASE_DIR + '/bro/tests/data/test-signature-match.sig', 'r') as s:
-                response = self.client.post('/admin/bro/signaturebro/add/', {'rev': '1',
-                                                                             'rule_full': str(s.read().replace('\r', '')),
-                                                                             'sid': '767',
-                                                                             'msg': 'Found root!',
-                                                                             'pcap_success': f,
-                                                                             },
+                response = self.client.post('/admin/bro/signaturebro/add/',
+                                            {'rev': '1',
+                                             'rule_full': str(s.read().replace('\r', '')),
+                                             'sid': '767',
+                                             'msg': 'Found root!',
+                                             'pcap_success': f,
+                                             },
                                             follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test signature OK', str(response.content))
@@ -137,22 +142,23 @@ class ViewsSignatureAdminTest(TestCase):
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test signatures OK', str(response.content))
-        response = self.client.post('/admin/bro/signaturebro/', {'action': 'delete_selected',
-                                                                 '_selected_action': SignatureBro.get_by_msg('Found root!').id,
-                                                                 'post': 'yes'},
+        response = self.client.post('/admin/bro/signaturebro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': SignatureBro.get_by_msg('Found root!').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 0)
         with open(settings.BASE_DIR + '/bro/tests/data/test-signature.pcap', 'rb') as f:
             with open(settings.BASE_DIR + '/bro/tests/data/test-signature-error.sig', 'r') as s:
-                response = self.client.post('/admin/bro/signaturebro/add/', {'rev': '1',
-                                                                             'rule_full': str(s.read().replace('\r', '')),
-                                                                             'sid': '768',
-                                                                             'msg': 'Found root!',
-                                                                             'pcap_success': f,
-                                                                             },
-                                        follow=True)
+                response = self.client.post('/admin/bro/signaturebro/add/',
+                                            {'rev': '1',
+                                             'rule_full': str(s.read().replace('\r', '')),
+                                             'sid': '768',
+                                             'msg': 'Found root!',
+                                             'pcap_success': f,
+                                             }, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test signature failed !', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 1)

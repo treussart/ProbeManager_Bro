@@ -62,7 +62,7 @@ class ViewsConfAdminTest(TestCase):
         self.assertIn('Test configuration OK', str(response.content))
         self.assertEqual(len(Configuration.get_all()), 3)
         response = self.client.post('/admin/bro/configuration/', {'action': 'test_configurations',
-                                                                      '_selected_action': '103'},
+                                                                  '_selected_action': '103'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("Test configurations OK", str(response.content))
@@ -86,7 +86,7 @@ class ViewsConfAdminTest(TestCase):
         self.assertIn('Test configuration failed !', str(response.content))
         self.assertEqual(len(Configuration.get_all()), 4)
         response = self.client.post('/admin/bro/configuration/', {'action': 'test_configurations',
-                                                                      '_selected_action': '104'},
+                                                                  '_selected_action': '104'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("Test configurations failed !", str(response.content))

@@ -27,14 +27,12 @@ class ViewsScriptAdminTest(TestCase):
         response = self.client.get('/admin/bro/scriptbro/', follow=True)
         self.assertEqual(response.status_code, 200)
         response = self.client.post('/admin/bro/scriptbro/', {'action': 'make_enabled',
-                                                              '_selected_action': str(ScriptBro.
-                                                                                       get_all()[0].id)},
+                                                              '_selected_action': str(ScriptBro.get_all()[0].id)},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("1 rule was successfully marked as enabled", str(response.content))
         response = self.client.post('/admin/bro/scriptbro/', {'action': 'make_disabled',
-                                                              '_selected_action': str(ScriptBro.
-                                                                                      get_all()[0].id)},
+                                                              '_selected_action': str(ScriptBro.get_all()[0].id)},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("1 rule was successfully marked as disabled", str(response.content))
@@ -69,7 +67,8 @@ class ViewsScriptAdminTest(TestCase):
 
         response = self.client.post('/admin/bro/scriptbro/',
                                     {'action': 'test_scripts',
-                                     '_selected_action': ScriptBro.get_by_name('The hash value of a file transferred over HTTP matched').id},
+                                     '_selected_action': ScriptBro.get_by_name('The hash value of a file '
+                                                                               'transferred over HTTP matched').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test scripts OK', str(response.content))
@@ -80,26 +79,32 @@ class ViewsScriptAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test scripts failed !', str(response.content))
 
-        response = self.client.post('/admin/bro/scriptbro/', {'action': 'delete_selected',
-                                                              '_selected_action': ScriptBro.get_by_name('fail script test').id},
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': ScriptBro.get_by_name('fail script test').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Are you sure you want to delete the selected ', str(response.content))
-        response = self.client.post('/admin/bro/scriptbro/', {'action': 'delete_selected',
-                                                              '_selected_action': ScriptBro.get_by_name('fail script test').id,
-                                                              'post': 'yes'},
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': ScriptBro.get_by_name('fail script test').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
         self.assertEqual(len(ScriptBro.get_all()), 1)
-        response = self.client.post('/admin/bro/scriptbro/', {'action': 'delete_selected',
-                                                              '_selected_action': ScriptBro.get_by_name('The hash value of a file transferred over HTTP matched').id},
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': ScriptBro.get_by_name('The hash value of a file '
+                                                                               'transferred over HTTP matched').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Are you sure you want to delete the selected ', str(response.content))
-        response = self.client.post('/admin/bro/scriptbro/', {'action': 'delete_selected',
-                                                              '_selected_action': ScriptBro.get_by_name('The hash value of a file transferred over HTTP matched').id,
-                                                              'post': 'yes'},
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': ScriptBro.get_by_name('The hash value of a file '
+                                                                               'transferred over HTTP matched').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
@@ -122,9 +127,10 @@ class ViewsScriptAdminTest(TestCase):
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test scripts OK', str(response.content))
-        response = self.client.post('/admin/bro/scriptbro/', {'action': 'delete_selected',
-                                                              '_selected_action': ScriptBro.get_by_name('failed logins').id,
-                                                              'post': 'yes'},
+        response = self.client.post('/admin/bro/scriptbro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': ScriptBro.get_by_name('failed logins').id,
+                                     'post': 'yes'},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Successfully deleted 1 ', str(response.content))
@@ -161,4 +167,5 @@ class ViewsScriptAdminTest(TestCase):
                                      'ruleset': RuleSetBro.get_by_name('test_bro_ruleset').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(ScriptBro.get_by_name('failed logins'), RuleSetBro.get_by_name('test_bro_ruleset').scripts.all())
+        self.assertNotIn(ScriptBro.get_by_name('failed logins'),
+                         RuleSetBro.get_by_name('test_bro_ruleset').scripts.all())
