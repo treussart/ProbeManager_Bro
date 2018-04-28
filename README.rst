@@ -39,6 +39,7 @@ Features
  * Tests signatures and scripts if generates notice via Pcap.
  * Adding data in the Intelligence Framework (IP, URL, Domain ...) possibility to import them in csv format.
  * Grouping rules into groups and assign this to probes.
+ * Pull feeds from Critical Stack.
 
 
 Installation
