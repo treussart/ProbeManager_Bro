@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.db import transaction
 
-from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel
+from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel, CriticalStack
 
 
 class ConfigurationTest(TestCase):
@@ -205,3 +205,23 @@ class IntelTest(TestCase):
         self.assertEqual(intel, None)
         with self.assertRaises(IntegrityError):
             Intel.objects.create(value="192.168.50.110", indicator="Intel::ADDR")
+
+
+class CriticalStackTest(TestCase):
+    fixtures = ['init', 'crontab', 'test-core-secrets', 'test-bro-signature', 'test-bro-script', 'test-bro-ruleset',
+                'test-bro-conf', 'test-bro-bro', 'test-bro-critical-stack']
+
+    @classmethod
+    def setUpTestData(cls):
+        pass
+
+    def test_critical_stack(self):
+        critical_stack = CriticalStack.objects.get(id=1)
+        self.assertEqual(str(critical_stack), "1-test_instance_bro : ")
+        self.assertTrue(critical_stack.deploy()['status'])
+        self.assertTrue(critical_stack.list()['status'])
+        self.assertIn('', critical_stack.list()['message'])
+        with self.assertRaises(IntegrityError):
+            CriticalStack.objects.create(api_key=critical_stack.api_key,
+                                         scheduled_pull=critical_stack.scheduled_pull,
+                                         bro=critical_stack.bro)

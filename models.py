@@ -12,6 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django_celery_beat.models import CrontabSchedule
 
 from core.utils import process_cmd
 from core.models import Probe, ProbeConfiguration
@@ -587,3 +588,42 @@ class Intel(CommonMixin, models.Model):
                                    meta_source=row['meta_source'],
                                    meta_desc=row['meta_desc'],
                                    meta_url=row['meta_url'],)
+
+
+class CriticalStack(models.Model):
+    api_key = models.CharField(max_length=300, null=False, blank=False, unique=True)
+    scheduled_pull = models.ForeignKey(CrontabSchedule, related_name='crontabschedule_pull', blank=False,
+                                       null=False, on_delete=models.CASCADE)
+    bro = models.ForeignKey(Bro, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id) + "-" + str(self.bro)
+
+    def deploy(self):
+        command1 = "critical-stack-intel api " + str(self.api_key)
+        command2 = "critical-stack-intel config --set bro.restart=true"
+        command3 = "critical-stack-intel pull"
+        tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
+        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+        try:
+            response = execute(self.bro.server, tasks, become=True)
+        except Exception as e:  # pragma: no cover
+            logger.exception('deploy failed')
+            return {'status': False, 'errors': str(e)}
+        else:
+            logger.debug("output : " + str(response))
+            return {'status': True}
+
+    def list(self):
+        command1 = "critical-stack-intel api " + str(self.api_key)
+        command2 = "critical-stack-intel list"
+        tasks_unordered = {"1_set_api": command1, "2_list": command2}
+        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+        try:
+            response = execute(self.bro.server, tasks, become=True)
+        except Exception as e:  # pragma: no cover
+            logger.exception('list failed')
+            return {'status': False, 'errors': str(e)}
+        else:
+            logger.debug("output : " + str(response))
+            return {'status': True, 'message': str(response)}

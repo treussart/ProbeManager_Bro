@@ -104,3 +104,6 @@
 # Not modify this lines ! (useful for ProbeManager)
 @load myscripts
 @load-sigs mysignatures
+
+# Critical Stack, Inc - https://intel.criticalstack.com
+@load /opt/critical-stack/frameworks/intel

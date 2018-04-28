@@ -100,3 +100,4 @@ ENV/
 settings.py
 version.txt
 /migrations/0*.py
+/fixtures/test-bro-critical-stack.json

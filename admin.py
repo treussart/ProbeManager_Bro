@@ -1,4 +1,5 @@
 import logging
+import json
 
 from django import forms
 from django.contrib import admin
@@ -7,7 +8,7 @@ from django.conf.urls import url
 from django.contrib.admin.helpers import ActionForm
 from django_celery_beat.models import PeriodicTask
 from .forms import BroChangeForm
-from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel
+from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel, CriticalStack
 from core.utils import generic_import_csv
 from core.utils import create_deploy_rules_task, create_check_task
 
@@ -273,6 +274,35 @@ class IntelAdmin(admin.ModelAdmin):
         return generic_import_csv(Intel, request)
 
 
+class CriticalStackAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        logger.debug("create scheduled task for " + str(obj))
+        PeriodicTask.objects.create(crontab=obj.scheduled_pull,
+                                    name=str(obj.api_key) + "_deploy_critical_stack",
+                                    task='bro.tasks.deploy_critical_stack',
+                                    args=json.dumps([obj.api_key, ])
+                                    )
+        super().save_model(request, obj, form, change)
+
+    def delete(self, request, obj):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=str(obj.api_key) + "_deploy_critical_stack")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        messages.add_message(request, messages.SUCCESS, "Critical stack instance " + str(obj.api_key) + " deleted")
+        super().delete_model(request, obj)
+
+    def delete_model(self, request, obj):
+        self.delete(request, obj)
+
+    list_display = ('__str__',)
+    list_display_links = None
+
+
+admin.site.register(CriticalStack, CriticalStackAdmin)
 admin.site.register(Bro, BroAdmin)
 admin.site.register(SignatureBro, SignatureBroAdmin)
 admin.site.register(ScriptBro, ScriptBroAdmin)
