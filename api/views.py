@@ -2,11 +2,11 @@ from rest_framework import viewsets
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 
 from bro.api.serializers import ConfigurationSerializer, BroSerializer, SignatureBroSerializer, ScriptBroSerializer, \
-    RuleSetBroSerializer
-from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro
+    RuleSetBroSerializer, IntelSerializer, CriticalStackSerializer
+from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel, CriticalStack
 
 
-class ConfigurationViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+class ConfigurationViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
@@ -22,7 +22,7 @@ class BroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = BroSerializer
 
 
-class SignatureBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+class SignatureBroViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
@@ -30,7 +30,7 @@ class SignatureBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericVi
     serializer_class = SignatureBroSerializer
 
 
-class ScriptBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+class ScriptBroViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
@@ -38,9 +38,25 @@ class ScriptBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewS
     serializer_class = ScriptBroSerializer
 
 
-class RuleSetBroViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+class RuleSetBroViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
     queryset = RuleSetBro.objects.all()
     serializer_class = RuleSetBroSerializer
+
+
+class IntelViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+    queryset = Intel.objects.all()
+    serializer_class = IntelSerializer
+
+
+class CriticalStackViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+    queryset = CriticalStack.objects.all()
+    serializer_class = CriticalStackSerializer
