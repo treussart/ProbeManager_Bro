@@ -1,6 +1,7 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_views --settings=probemanager.settings.dev """
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
+
 from bro.models import Bro
 
 

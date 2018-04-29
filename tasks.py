@@ -3,8 +3,8 @@ from celery.utils.log import get_task_logger
 
 from core.models import Job
 from core.notifications import send_notification
-
 from .models import CriticalStack
+
 logger = get_task_logger(__name__)
 
 

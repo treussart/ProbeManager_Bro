@@ -1,9 +1,9 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_models --settings=probemanager.settings.dev """
+from django.conf import settings
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from django.conf import settings
-from django.db import transaction
 
 from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel, CriticalStack
 

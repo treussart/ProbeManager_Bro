@@ -4,8 +4,8 @@ import os
 import re
 import subprocess
 from collections import OrderedDict
-from string import Template
 from shutil import copyfile, move
+from string import Template
 
 import select2.fields
 from django.conf import settings
@@ -14,10 +14,10 @@ from django.db.models import Q
 from django.utils import timezone
 from django_celery_beat.models import CrontabSchedule
 
-from core.utils import process_cmd
 from core.models import Probe, ProbeConfiguration
 from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
+from core.utils import process_cmd
 from rules.models import RuleSet, Rule
 
 logger = logging.getLogger(__name__)
