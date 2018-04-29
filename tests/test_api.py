@@ -72,6 +72,11 @@ class APITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Bro.get_by_name('test').installed)
 
+        response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/',
+                                     {'scheduled_rules_deployment_enabled': False})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Bro.get_by_name('test').scheduled_rules_deployment_enabled)
+
         response = self.client.delete('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
