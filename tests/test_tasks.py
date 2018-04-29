@@ -1,9 +1,9 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_tasks --settings=probemanager.settings.dev """
-from django.test import TestCase
 from django.conf import settings
+from django.test import TestCase
 
-from bro.tasks import deploy_critical_stack
 from bro.models import CriticalStack
+from bro.tasks import deploy_critical_stack
 
 
 class TasksBroTest(TestCase):

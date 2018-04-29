@@ -1,9 +1,9 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_views_admin_intel --settings=probemanager.settings.dev """
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.test import Client, TestCase
 from django.utils import timezone
-from django.db import transaction
 
 from bro.models import Intel
 

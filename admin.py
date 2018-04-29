@@ -1,16 +1,17 @@
-import logging
 import json
+import logging
 
 from django import forms
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
-from django.conf.urls import url
 from django.contrib.admin.helpers import ActionForm
 from django_celery_beat.models import PeriodicTask
+
+from core.utils import create_deploy_rules_task, create_check_task
+from core.utils import generic_import_csv
 from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel, CriticalStack
-from core.utils import generic_import_csv
-from core.utils import create_deploy_rules_task, create_check_task
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,12 @@ class BroAdmin(admin.ModelAdmin):
             logger.debug(str(periodic_task) + " deleted")
         except PeriodicTask.DoesNotExist:  # pragma: no cover
             pass
+        try:
+            periodic_task = PeriodicTask.objects.get(name=probe.name + "_check_task")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
         messages.add_message(request, messages.SUCCESS, "Bro instance " + probe.name + " deleted")
         super().delete_model(request, obj)
 
@@ -94,15 +101,9 @@ class BroAdmin(admin.ModelAdmin):
     def delete_model(self, request, obj):
         self.delete(request, obj)
 
-    def delete_bro(self, request, obj):
+    def delete_selected(self, request, obj):
         for probe in obj:
             self.delete(request, obj, probe=probe)
-
-    def get_actions(self, request):
-        actions = super(BroAdmin, self).get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
 
     def test_rules(self, request, obj):
         test = True
@@ -117,7 +118,7 @@ class BroAdmin(admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
 
-    actions = [delete_bro, test_rules]
+    actions = [delete_selected, test_rules]
 
 
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
