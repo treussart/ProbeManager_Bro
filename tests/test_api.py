@@ -1,10 +1,10 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_api --settings=probemanager.settings.dev """
-from rest_framework.test import APIClient
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.test import APITestCase
-from rest_framework import status
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
+from rest_framework import status
+from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
 from bro.models import Bro, CriticalStack
 
