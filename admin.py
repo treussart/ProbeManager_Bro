@@ -82,6 +82,12 @@ class BroAdmin(admin.ModelAdmin):
             logger.debug(str(periodic_task) + " deleted")
         except PeriodicTask.DoesNotExist:  # pragma: no cover
             pass
+        try:
+            periodic_task = PeriodicTask.objects.get(name=probe.name + "_check_task")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
         messages.add_message(request, messages.SUCCESS, "Bro instance " + probe.name + " deleted")
         super().delete_model(request, obj)
 
