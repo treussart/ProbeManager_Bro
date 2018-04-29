@@ -6,7 +6,7 @@ from .models import Bro
 class BroChangeForm(ModelForm):
     class Meta:
         model = Bro
-        fields = ('name',
+        fields = (
                   'description',
                   'installed',
                   'secure_deployment',
