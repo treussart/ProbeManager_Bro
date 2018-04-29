@@ -36,7 +36,7 @@ class BroUpdateViewSet(viewsets.GenericViewSet):
         return self.update(request)
 
 
-class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = Bro.objects.all()
     serializer_class = BroSerializer
 
