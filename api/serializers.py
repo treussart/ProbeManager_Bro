@@ -15,6 +15,12 @@ class BroSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class BroUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bro
+        fields = 'name', 'description', 'installed', 'secure_deployment', 'server', 'rulesets', 'configuration'
+
+
 class SignatureBroSerializer(serializers.ModelSerializer):
     class Meta:
         model = SignatureBro
