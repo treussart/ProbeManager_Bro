@@ -65,6 +65,9 @@ class APITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Bro.get_by_name('test').installed)
 
+        response = self.client.put('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', {'name': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', data_patch)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Bro.get_by_name('test').installed)
