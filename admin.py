@@ -100,15 +100,9 @@ class BroAdmin(admin.ModelAdmin):
     def delete_model(self, request, obj):
         self.delete(request, obj)
 
-    def delete_bro(self, request, obj):
+    def delete_selected(self, request, obj):
         for probe in obj:
             self.delete(request, obj, probe=probe)
-
-    def get_actions(self, request):
-        actions = super(BroAdmin, self).get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
 
     def test_rules(self, request, obj):
         test = True
@@ -123,7 +117,7 @@ class BroAdmin(admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
 
-    actions = [delete_bro, test_rules]
+    actions = [delete_selected, test_rules]
 
 
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):

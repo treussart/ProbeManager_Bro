@@ -82,7 +82,7 @@ class ViewsBroAdminTest(TestCase):
         self.assertIn(' was changed successfully', str(response.content))
         self.assertFalse(Bro.get_by_name('test').installed)
         response = self.client.post('/admin/bro/bro/',
-                                    {'action': 'delete_bro',
+                                    {'action': 'delete_selected',
                                      '_selected_action': Bro.get_by_name('test').id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn("Bro instance test deleted", str(response.content))
