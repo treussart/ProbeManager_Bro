@@ -20,23 +20,7 @@ class ConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = ConfigurationSerializer
 
 
-class BroUpdateViewSet(viewsets.GenericViewSet):
-    queryset = Bro.objects.all()
-    serializer_class = BroUpdateSerializer
-
-    def update(self, request, pk=None):
-        bro = self.get_object()
-        serializer = BroUpdateSerializer(bro, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def partial_update(self, request, pk=None):
-        return self.update(request)
-
-
-class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Bro.objects.all()
     serializer_class = BroSerializer
 
@@ -68,6 +52,22 @@ class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Update
             pass
         bro.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def update(self, request, pk=None):
+        bro = self.get_object()
+        serializer = BroUpdateSerializer(bro, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk=None):
+        bro = self.get_object()
+        serializer = BroUpdateSerializer(bro, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignatureBroViewSet(viewsets.ModelViewSet):
