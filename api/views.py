@@ -98,9 +98,10 @@ class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
         serializer = CriticalStackSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            logger.debug("create scheduled task for " + str(request.data['api_key']))
+            criticalstack = CriticalStack.objects.get(api_key=request.data['api_key'])
+            logger.debug("create scheduled task for " + str(criticalstack))
             PeriodicTask.objects.create(crontab=CrontabSchedule.objects.get(id=request.data['scheduled_pull']),
-                                        name=str(request.data['api_key']) + "_deploy_critical_stack",
+                                        name=str(criticalstack) + "_deploy_critical_stack",
                                         task='bro.tasks.deploy_critical_stack',
                                         args=json.dumps([request.data['api_key'], ])
                                         )
@@ -110,9 +111,8 @@ class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
     def destroy(self, request, pk=None):
         critical_stack = self.get_object()
         try:
-            pass
             periodic_task = PeriodicTask.objects.get(
-              name=str(critical_stack.api_key) + "_deploy_critical_stack")
+              name=str(critical_stack) + "_deploy_critical_stack")
             periodic_task.delete()
             logger.debug(str(periodic_task) + " deleted")
         except PeriodicTask.DoesNotExist:  # pragma: no cover

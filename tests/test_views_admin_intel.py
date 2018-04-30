@@ -28,9 +28,8 @@ class ViewsConfAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(len(Intel.get_all()), 2)
-        response = self.client.post('/admin/bro/intel/add/', {"value": "192.168.50.111",
-                                                              "indicator": "Intel::ADDR",
-                                                              "indicator_type": "-",
+        response = self.client.post('/admin/bro/intel/add/', {"indicator": "192.168.50.111",
+                                                              "indicator_type": "Intel::ADDR",
                                                               "meta_source": "-",
                                                               "meta_desc": "-",
                                                               "meta_url": "-"
@@ -39,16 +38,15 @@ class ViewsConfAdminTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('was added successfully.', str(response.content))
         self.assertEqual(len(Intel.get_all()), 3)
-        response = self.client.post('/admin/bro/intel/add/', {"value": "192.168.50.111",
-                                                              "indicator": "Intel::ADDR",
-                                                              "indicator_type": "-",
+        response = self.client.post('/admin/bro/intel/add/', {"indicator": "192.168.50.111",
+                                                              "indicator_type": "Intel::ADDR",
                                                               "meta_source": "-",
                                                               "meta_desc": "-",
                                                               "meta_url": "-"
                                                               },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Intel with this Value and Indicator already exists.', str(response.content))
+        self.assertIn('Intel with this Indicator and Indicator type already exists.', str(response.content))
         self.assertEqual(len(Intel.get_all()), 3)
 
         response = self.client.get('/admin/bro/intel/import_csv/', follow=True)

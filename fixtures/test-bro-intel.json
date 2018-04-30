@@ -3,9 +3,8 @@
     "model": "bro.intel",
     "pk": 1,
     "fields": {
-        "value": "192.168.50.110",
-        "indicator": "Intel::ADDR",
-        "indicator_type": "-",
+        "indicator": "192.168.50.110",
+        "indicator_type": "Intel::ADDR",
         "meta_source": "-",
         "meta_desc": "-",
         "meta_url": "-"
@@ -15,9 +14,8 @@
     "model": "bro.intel",
     "pk": 2,
     "fields": {
-        "value": "http://www.treussart.com",
-        "indicator": "Intel::URL",
-        "indicator_type": "-",
+        "indicator": "http://www.treussart.com",
+        "indicator_type": "Intel::URL",
         "meta_source": "-",
         "meta_desc": "-",
         "meta_url": "-"

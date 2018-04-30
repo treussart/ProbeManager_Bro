@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import logging
 import os
 import re
@@ -376,9 +377,12 @@ class Bro(Probe):
                 logger.exception('Failed to get status')
                 return 'Failed to get status'
             logger.debug("output : " + str(response))
-            return response['status']
-        else:  # pragma: no cover
-            return " "
+            if response['status'] == "OK":
+                return ""
+            else:
+                return response['status']
+        else:
+            return 'Not installed'
 
     def uptime(self):
         return self.status()
@@ -519,7 +523,7 @@ class Intel(CommonMixin, models.Model):
     "#fields indicator       indicator_type  meta.source     meta.desc       meta.url"
     """
     class Meta:
-        unique_together = ("value", "indicator")
+        unique_together = ("indicator", "indicator_type")
 
     TYPE_CHOICES = (
         ('Intel::ADDR', 'Intel::ADDR'),
@@ -535,23 +539,22 @@ class Intel(CommonMixin, models.Model):
         ('Intel::FILE_NAME', 'Intel::FILE_NAME'),
         ('Intel::PUBKEY_HASH', 'Intel::PUBKEY_HASH'),
     )
-    value = models.CharField(max_length=300, null=False, blank=False)
-    indicator = models.CharField(max_length=200, choices=TYPE_CHOICES)
-    indicator_type = models.CharField(max_length=300, default='-')
+    indicator = models.CharField(max_length=300, null=False, blank=False)
+    indicator_type = models.CharField(max_length=200, choices=TYPE_CHOICES)
     meta_source = models.CharField(max_length=300, default='-')
     meta_desc = models.CharField(max_length=300, default='-')
     meta_url = models.CharField(max_length=300, default='-')
 
     def __str__(self):
-        return str(self.indicator) + "-" + str(self.value)
+        return str(self.indicator_type) + "-" + str(self.indicator)
 
     @classmethod
     def store(cls, tmp_dir):
         tmp_file = tmp_dir + "intel-1.dat"
         with open(tmp_file, 'a', encoding='utf_8', newline='\n') as f:
-            f.write("#fields\tindicator\tindicator_type\tmeta.source\tmeta.desc\tmeta.url")
+            f.write("#indicator\tindicator_type\tmeta.source\tmeta.desc\tmeta.url")
             for intel in cls.get_all():
-                f.write(intel.value + "\t" + intel.indicator + "\t" + intel.indicator_type + "\t"
+                f.write(intel.indicator + "\t" + intel.indicator_type + "\t"
                         + intel.meta_source + "\t" + intel.meta_desc + "\t" + intel.meta_url)
         return tmp_file
 
@@ -579,11 +582,10 @@ class Intel(CommonMixin, models.Model):
     @classmethod
     def import_from_csv(cls, csv_file):
         with open(csv_file, newline='') as file:
-            reader = csv.DictReader(file, fieldnames=['value', 'indicator', 'indicator_type',
+            reader = csv.DictReader(file, fieldnames=['indicator', 'indicator_type',
                                                       'meta_source', 'meta_desc', 'meta_url'], delimiter=',')
             for row in reader:
-                cls.objects.create(value=row['value'],
-                                   indicator=row['indicator'],
+                cls.objects.create(indicator=row['indicator'],
                                    indicator_type=row['indicator_type'],
                                    meta_source=row['meta_source'],
                                    meta_desc=row['meta_desc'],
@@ -594,36 +596,48 @@ class CriticalStack(models.Model):
     api_key = models.CharField(max_length=300, null=False, blank=False, unique=True)
     scheduled_pull = models.ForeignKey(CrontabSchedule, related_name='crontabschedule_pull', blank=False,
                                        null=False, on_delete=models.CASCADE)
-    bro = models.ForeignKey(Bro, on_delete=models.CASCADE)
+    bros = models.ManyToManyField(Bro)
 
     def __str__(self):
-        return str(self.id) + "-" + str(self.bro)
+        return str(hashlib.md5(str(self.api_key).encode(encoding='UTF-8')).hexdigest())
 
     def deploy(self):
-        command1 = "critical-stack-intel api " + str(self.api_key)
-        command2 = "critical-stack-intel config --set bro.restart=true"
-        command3 = "critical-stack-intel pull"
-        tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
-        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
-        try:
-            response = execute(self.bro.server, tasks, become=True)
-        except Exception as e:  # pragma: no cover
-            logger.exception('deploy failed')
-            return {'status': False, 'errors': str(e)}
+        errors = list()
+        for bro in self.bros.all():
+            command1 = "critical-stack-intel api " + str(self.api_key)
+            command2 = "critical-stack-intel config --set bro.restart=true"
+            command3 = "critical-stack-intel pull"
+            tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
+            tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+            try:
+                response = execute(bro.server, tasks, become=True)
+            except Exception as e:  # pragma: no cover
+                logger.exception('deploy failed for ' + str(bro))
+                errors.append('deploy failed for ' + str(bro) + ': ' + str(e))
+            else:
+                logger.debug("output : " + str(response))
+        if errors:
+            return {'status': False, 'errors': str(errors)}
         else:
-            logger.debug("output : " + str(response))
             return {'status': True}
 
     def list(self):
-        command1 = "critical-stack-intel api " + str(self.api_key)
-        command2 = "critical-stack-intel list"
-        tasks_unordered = {"1_set_api": command1, "2_list": command2}
-        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
-        try:
-            response = execute(self.bro.server, tasks, become=True)
-        except Exception as e:  # pragma: no cover
-            logger.exception('list failed')
-            return {'status': False, 'errors': str(e)}
+        errors = list()
+        success = list()
+        for bro in self.bros.all():
+            command1 = "critical-stack-intel api " + str(self.api_key)
+            command2 = "critical-stack-intel list"
+            tasks_unordered = {"1_set_api": command1, "2_list": command2}
+            tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+            try:
+                response = execute(bro.server, tasks, become=True)
+            except Exception as e:  # pragma: no cover
+                logger.exception('list failed for ' + str(bro))
+                errors.append('list failed for ' + str(bro) + ': ' + str(e))
+            else:
+                logger.debug("output : " + str(response))
+                success.append(response['2_list'])
+        if errors:
+            return {'status': False, 'errors': str(errors)}
         else:
-            logger.debug("output : " + str(response))
-            return {'status': True, 'message': response['2_list']}
+            return {'status': True, 'message': str(success)}

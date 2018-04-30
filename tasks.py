@@ -37,6 +37,6 @@ def deploy_critical_stack(api_key):
         except Exception as e:  # pragma: no cover
             logger.exception('Error during the critical stack deployed')
             job.update_job(str(e), 'Error')
-            send_notification("Probe " + str(api_key), str(e))
+            send_notification("Critical stack " + str(api_key), str(e))
             return {"message": "Error for Critical Stack " + str(api_key) + " to deploy", "exception": str(e)}
         return {"message": "Critical Stack " + str(api_key) + ' deployed successfully'}
