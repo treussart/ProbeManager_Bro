@@ -64,14 +64,14 @@ Page to add a Bro IDS instance :
   :align: center
   :width: 70%
 
-* Give a unique name for this instance, example: server-tap1_bro.
-* Specify if you want rules to be verified at each deployment.
-* Enable scheduled deployment of rules.
-* Enable instance monitoring. (Check if the probe is active)
-* Specify the server for the probe.
-* Specify if the probe is already installed.
-* Choose the sets of rules that will be deployed on this probe.
-* Give the configuration of the probe.
+* Name: Give a unique name for this instance, example: server-tap1_bro.
+* Secure deployment: Specify if you want rules to be verified at each deployment.
+* Scheduled rules deployment enabled: Enable scheduled deployment of rules.
+* Scheduled check enabled: Enable instance monitoring. (Check if the probe is active)
+* Server: Specify the server for the probe.
+* Probe already installed: Specify if the probe is already installed.
+* Rulesets: Choose the sets of rules that will be deployed on this probe.
+* Configuration: Give the configuration of the probe.
 
 Page to add a configuration :
 -----------------------------
@@ -82,10 +82,10 @@ Allows you to modify the `Bro configuration <https://www.bro.org/sphinx/quicksta
   :align: center
   :width: 80%
 
-* broctl.cfg, change the MailTo email address to a desired recipient and the LogRotationInterval to a desired log archival frequency.
-* node.cfg, set the right interface to monitor.
-* networks.cfg, comment out the default settings and add the networks that Bro will consider local to the monitored environment.
-* local.bro, The main entry point for the default analysis configuration of a standalone Bro instance managed by BroControl.
+* broctl.cfg: Change the MailTo email address to a desired recipient and the LogRotationInterval to a desired log archival frequency.
+* node.cfg: Set the right interface to monitor.
+* networks.cfg: Comment out the default settings and add the networks that Bro will consider local to the monitored environment.
+* local.bro: The main entry point for the default analysis configuration of a standalone Bro instance managed by BroControl.
 
 Page to add a Bro Intel :
 -------------------------
@@ -96,7 +96,11 @@ Allows you to add a `Bro Intel <https://www.bro.org/sphinx-git/frameworks/intel.
   :align: center
   :width: 60%
 
-* indicator   indicator_type   meta.source.  meta.desc   meta.url
+* indicator: The value
+* indicator_type: `List of types available <https://www.bro.org/sphinx-git/scripts/base/frameworks/intel/main.bro.html#type-Intel::Type>`_.
+* meta.source: An arbitrary string value representing the data source. This value is used as unique key to identify a metadata record in the scope of a single intelligence item.
+* meta.desc: A freeform description for the data.
+* meta.url: A URL for more information about the data.
 
 
 Page to add a Critical Stack client on a Bro instance :
@@ -108,9 +112,9 @@ Page to add a Critical Stack client on a Bro instance :
   :align: center
   :width: 70%
 
-* API Key of your Sensor.
-* Give a crontab for planning pull of intel from feeds.
-* Select Bro instances to apply.
+* API Key: API Key of your Sensor.
+* Schedulled pull: Give a crontab for planning pull of intel from feeds.
+* Bros: Select Bro instances to apply.
 
 Page of an instance :
 ---------------------
@@ -119,11 +123,11 @@ Page of an instance :
   :align: center
   :width: 80%
 
-* Uptime indicate the time elapsed since the last time the application was started.
+* 'Uptime' Indicate the time elapsed since the last time the application was started.
 * 'Refresh Instance Status' is a button to know the status of the application. (running or not)
-* Update instance, you need to edit the conf file to change the version number you want.
-* Deploy configuration, copy configuration files to the remote server, and reload the Bro instance.
-* Deploy rules, copy rules (signatures and scripts) files to the remote server, and reload the Bro instance.
+* 'Update instance', you need to edit the conf file to change the version number you want.
+* 'Deploy configuration', copy configuration files to the remote server, and reload the Bro instance.
+* 'Deploy rules', copy rules (signatures and scripts) files to the remote server, and reload the Bro instance.
 
 Miscellaneous
 -------------
