@@ -279,7 +279,7 @@ class CriticalStackAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         logger.debug("create scheduled task for " + str(obj))
         PeriodicTask.objects.create(crontab=obj.scheduled_pull,
-                                    name=str(obj.api_key) + "_deploy_critical_stack",
+                                    name=str(obj) + "_deploy_critical_stack",
                                     task='bro.tasks.deploy_critical_stack',
                                     args=json.dumps([obj.api_key, ])
                                     )
@@ -288,12 +288,12 @@ class CriticalStackAdmin(admin.ModelAdmin):
     def delete(self, request, obj):
         try:
             periodic_task = PeriodicTask.objects.get(
-                name=str(obj.api_key) + "_deploy_critical_stack")
+                name=str(obj) + "_deploy_critical_stack")
             periodic_task.delete()
             logger.debug(str(periodic_task) + " deleted")
         except PeriodicTask.DoesNotExist:  # pragma: no cover
             pass
-        messages.add_message(request, messages.SUCCESS, "Critical stack instance " + str(obj.api_key) + " deleted")
+        messages.add_message(request, messages.SUCCESS, "Critical stack instance " + str(obj) + " deleted")
         super().delete_model(request, obj)
 
     def delete_model(self, request, obj):

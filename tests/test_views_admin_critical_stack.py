@@ -30,19 +30,19 @@ class ViewsCriticalStackAdminTest(TestCase):
         response = self.client.post('/admin/bro/criticalstack/add/', {
             "api_key": "19216850111",
             "scheduled_pull": "1",
-            "bro": "101",
+            "bros": "101",
             },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('was added successfully.', str(response.content))
         self.assertEqual(len(CriticalStack.objects.all()), 2)
-        self.assertEqual("19216850111_deploy_critical_stack",
-                         PeriodicTask.objects.get(name="19216850111_deploy_critical_stack").name)
+        criticalstack = CriticalStack.objects.get(api_key="19216850111")
+        self.assertTrue(PeriodicTask.objects.get(name=str(criticalstack) + "_deploy_critical_stack"))
 
         response = self.client.post('/admin/bro/criticalstack/add/', {
             "api_key": "19216850111",
             "scheduled_pull": "1",
-            "bro": "101",
+            "bros": "101",
             },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
@@ -60,4 +60,4 @@ class ViewsCriticalStackAdminTest(TestCase):
         self.assertEqual(len(CriticalStack.objects.all()), 1)
 
         with self.assertRaises(Exception):
-            PeriodicTask.objects.get(name="19216850111_deploy_critical_stack")
+            PeriodicTask.objects.get(name=str(criticalstack) + "_deploy_critical_stack")

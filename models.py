@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import logging
 import os
 import re
@@ -592,36 +593,48 @@ class CriticalStack(models.Model):
     api_key = models.CharField(max_length=300, null=False, blank=False, unique=True)
     scheduled_pull = models.ForeignKey(CrontabSchedule, related_name='crontabschedule_pull', blank=False,
                                        null=False, on_delete=models.CASCADE)
-    bro = models.ForeignKey(Bro, on_delete=models.CASCADE)
+    bros = models.ManyToManyField(Bro)
 
     def __str__(self):
-        return str(self.id) + "-" + str(self.bro)
+        return str(hashlib.md5(str(self.api_key).encode(encoding='UTF-8')).hexdigest())
 
     def deploy(self):
-        command1 = "critical-stack-intel api " + str(self.api_key)
-        command2 = "critical-stack-intel config --set bro.restart=true"
-        command3 = "critical-stack-intel pull"
-        tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
-        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
-        try:
-            response = execute(self.bro.server, tasks, become=True)
-        except Exception as e:  # pragma: no cover
-            logger.exception('deploy failed')
-            return {'status': False, 'errors': str(e)}
+        errors = list()
+        for bro in self.bros.all():
+            command1 = "critical-stack-intel api " + str(self.api_key)
+            command2 = "critical-stack-intel config --set bro.restart=true"
+            command3 = "critical-stack-intel pull"
+            tasks_unordered = {"1_set_api": command1, "2_set_restart": command2, "3_pull": command3}
+            tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+            try:
+                response = execute(bro.server, tasks, become=True)
+            except Exception as e:  # pragma: no cover
+                logger.exception('deploy failed for ' + str(bro))
+                errors.append('deploy failed for ' + str(bro) + ': ' + str(e))
+            else:
+                logger.debug("output : " + str(response))
+        if errors:
+            return {'status': False, 'errors': str(errors)}
         else:
-            logger.debug("output : " + str(response))
             return {'status': True}
 
     def list(self):
-        command1 = "critical-stack-intel api " + str(self.api_key)
-        command2 = "critical-stack-intel list"
-        tasks_unordered = {"1_set_api": command1, "2_list": command2}
-        tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
-        try:
-            response = execute(self.bro.server, tasks, become=True)
-        except Exception as e:  # pragma: no cover
-            logger.exception('list failed')
-            return {'status': False, 'errors': str(e)}
+        errors = list()
+        success = list()
+        for bro in self.bros.all():
+            command1 = "critical-stack-intel api " + str(self.api_key)
+            command2 = "critical-stack-intel list"
+            tasks_unordered = {"1_set_api": command1, "2_list": command2}
+            tasks = OrderedDict(sorted(tasks_unordered.items(), key=lambda t: t[0]))
+            try:
+                response = execute(bro.server, tasks, become=True)
+            except Exception as e:  # pragma: no cover
+                logger.exception('list failed for ' + str(bro))
+                errors.append('list failed for ' + str(bro) + ': ' + str(e))
+            else:
+                logger.debug("output : " + str(response))
+                success.append(response['2_list'])
+        if errors:
+            return {'status': False, 'errors': str(errors)}
         else:
-            logger.debug("output : " + str(response))
-            return {'status': True, 'message': response['2_list']}
+            return {'status': True, 'message': str(success)}
