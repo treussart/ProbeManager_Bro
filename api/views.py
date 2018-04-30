@@ -110,7 +110,6 @@ class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
     def destroy(self, request, pk=None):
         critical_stack = self.get_object()
         try:
-            pass
             periodic_task = PeriodicTask.objects.get(
               name=str(critical_stack.api_key) + "_deploy_critical_stack")
             periodic_task.delete()
