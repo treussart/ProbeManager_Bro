@@ -45,7 +45,6 @@ class ViewsSignatureAdminTest(TestCase):
         response = self.client.post('/admin/bro/signaturebro/add/', {'rev': '0',
                                                                      'rule_full': '1',
                                                                      'sid': '666',
-                                                                     'classtype': '2',
                                                                      'msg': 'fail test',
                                                                      },
                                     follow=True)
