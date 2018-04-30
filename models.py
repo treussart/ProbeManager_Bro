@@ -377,9 +377,12 @@ class Bro(Probe):
                 logger.exception('Failed to get status')
                 return 'Failed to get status'
             logger.debug("output : " + str(response))
-            return response['status']
-        else:  # pragma: no cover
-            return " "
+            if response['status'] == "OK":
+                return ""
+            else:
+                return response['status']
+        else:
+            return 'Not installed'
 
     def uptime(self):
         return self.status()
