@@ -191,7 +191,7 @@ class IntelTest(TestCase):
     def test_intel(self):
         self.assertEqual(len(Intel.get_all()), 2)
         intel = Intel.get_by_id(1)
-        self.assertEqual(intel.value, "192.168.50.110")
+        self.assertEqual(intel.indicator, "192.168.50.110")
         self.assertEqual(str(intel), "Intel::ADDR-192.168.50.110")
         with Intel.get_tmp_dir() as tmp_dir:
             self.assertEqual(Intel.store(tmp_dir), tmp_dir + "intel-1.dat")
@@ -204,7 +204,7 @@ class IntelTest(TestCase):
         intel = Intel.get_by_id(99)
         self.assertEqual(intel, None)
         with self.assertRaises(IntegrityError):
-            Intel.objects.create(value="192.168.50.110", indicator="Intel::ADDR")
+            Intel.objects.create(indicator="192.168.50.110", indicator_type="Intel::ADDR")
 
 
 class CriticalStackTest(TestCase):

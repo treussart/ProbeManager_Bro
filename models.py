@@ -519,7 +519,7 @@ class Intel(CommonMixin, models.Model):
     "#fields indicator       indicator_type  meta.source     meta.desc       meta.url"
     """
     class Meta:
-        unique_together = ("value", "indicator")
+        unique_together = ("indicator", "indicator_type")
 
     TYPE_CHOICES = (
         ('Intel::ADDR', 'Intel::ADDR'),
@@ -535,23 +535,22 @@ class Intel(CommonMixin, models.Model):
         ('Intel::FILE_NAME', 'Intel::FILE_NAME'),
         ('Intel::PUBKEY_HASH', 'Intel::PUBKEY_HASH'),
     )
-    value = models.CharField(max_length=300, null=False, blank=False)
-    indicator = models.CharField(max_length=200, choices=TYPE_CHOICES)
-    indicator_type = models.CharField(max_length=300, default='-')
+    indicator = models.CharField(max_length=300, null=False, blank=False)
+    indicator_type = models.CharField(max_length=200, choices=TYPE_CHOICES)
     meta_source = models.CharField(max_length=300, default='-')
     meta_desc = models.CharField(max_length=300, default='-')
     meta_url = models.CharField(max_length=300, default='-')
 
     def __str__(self):
-        return str(self.indicator) + "-" + str(self.value)
+        return str(self.indicator_type) + "-" + str(self.indicator)
 
     @classmethod
     def store(cls, tmp_dir):
         tmp_file = tmp_dir + "intel-1.dat"
         with open(tmp_file, 'a', encoding='utf_8', newline='\n') as f:
-            f.write("#fields\tindicator\tindicator_type\tmeta.source\tmeta.desc\tmeta.url")
+            f.write("#indicator\tindicator_type\tmeta.source\tmeta.desc\tmeta.url")
             for intel in cls.get_all():
-                f.write(intel.value + "\t" + intel.indicator + "\t" + intel.indicator_type + "\t"
+                f.write(intel.indicator + "\t" + intel.indicator_type + "\t"
                         + intel.meta_source + "\t" + intel.meta_desc + "\t" + intel.meta_url)
         return tmp_file
 
@@ -579,11 +578,10 @@ class Intel(CommonMixin, models.Model):
     @classmethod
     def import_from_csv(cls, csv_file):
         with open(csv_file, newline='') as file:
-            reader = csv.DictReader(file, fieldnames=['value', 'indicator', 'indicator_type',
+            reader = csv.DictReader(file, fieldnames=['indicator', 'indicator_type',
                                                       'meta_source', 'meta_desc', 'meta_url'], delimiter=',')
             for row in reader:
-                cls.objects.create(value=row['value'],
-                                   indicator=row['indicator'],
+                cls.objects.create(indicator=row['indicator'],
                                    indicator_type=row['indicator_type'],
                                    meta_source=row['meta_source'],
                                    meta_desc=row['meta_desc'],
