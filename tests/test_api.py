@@ -96,10 +96,13 @@ class APITest(APITestCase):
 
         data = {'api_key': '19216850111',
                 'scheduled_pull': 1,
-                'bro': 101}
+                'bros': [101, ]}
 
         response = self.client.post('/api/v1/bro/criticalstack/', data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        criticalstack = CriticalStack.objects.get(api_key="19216850111")
+        self.assertTrue(PeriodicTask.objects.get(name=str(criticalstack) + "_deploy_critical_stack"))
 
         response = self.client.post('/api/v1/bro/criticalstack/', {'api_key': 'test'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -108,9 +111,11 @@ class APITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
 
-        response = self.client.delete('/api/v1/bro/criticalstack/' +
-                                      str(CriticalStack.objects.get(api_key='19216850111').id) + '/')
+        response = self.client.delete('/api/v1/bro/criticalstack/' + str(criticalstack.id) + '/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        with self.assertRaises(ObjectDoesNotExist):
+            PeriodicTask.objects.get(name=str(criticalstack) + "_deploy_critical_stack")
 
         response = self.client.get('/api/v1/bro/criticalstack/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
