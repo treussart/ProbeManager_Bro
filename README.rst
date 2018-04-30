@@ -55,6 +55,7 @@ Usage
 .. |Admin page for add a conf| image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-conf-add.png
 .. |Admin page for add a intel| image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-intel-add.png
 .. |Admin page for add a criticalstack| image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-criticalstack-add.png
+.. |Instance page| image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/instance-index.png
 
 
 Administration Page of the module :
@@ -107,4 +108,21 @@ Page to add a Critical Stack client on a Bro instance :
 
  * API Key of your Sensor.
  * Give a crontab for planning pull of intel from feeds.
- * Select the Bro instance to apply.
+ * Select Bro instances to apply.
+
+Page of an instance :
+---------------------
+
+|Instance page|
+
+ * Uptime indicate the time elapsed since the last time the application was started.
+ * 'Refresh Instance Status' is a button to know the status of the application. (running or not)
+ * Update instance, you need to edit the conf file to change the version number you want.
+ * Deploy configuration, copy configuration files to the remote server, and reload the Bro instance.
+ * Deploy rules, copy rules (signatures and scripts) files to the remote server, and reload the Bro instance.
+
+Miscellaneous
+-------------
+
+The problem with Bro scripts is that they are not necessarily independent of each other, which is complicated to test them.
+TODO : To solve this problem, it would be necessary to test all the scripts of an instance at the same time.
