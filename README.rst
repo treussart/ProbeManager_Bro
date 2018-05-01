@@ -35,10 +35,10 @@ Features
 * Install and update Bro NIDS on a remote server.
 * Configure the settings and test the configuration.
 * Add, Delete, Update scripts and signatures.
-* Tests signatures and scripts compliance.
-* Tests signatures and scripts if generates notice via Pcap.
-* Adding data in the Intelligence Framework (IP, URL, Domain ...) possibility to import them in csv format.
-* Grouping rules into groups and assign this to probes.
+* Test signatures and scripts compliance.
+* Test signatures and scripts via Pcap.
+* Add data to the `Intelligence Framework <https://www.bro.org/sphinx-git/scripts/base/frameworks/intel/main.bro.html>`_ (IP, URL, Domain ...) possibility to import them in csv format.
+* Group rules into groups and assign them to probes.
 * Pull feeds from `Critical Stack <https://intel.criticalstack.com/>`_.
 
 
@@ -98,7 +98,7 @@ Allows you to add a `Bro Intel <https://www.bro.org/sphinx-git/frameworks/intel.
 
 * indicator: The value
 * indicator_type: `List of types available <https://www.bro.org/sphinx-git/scripts/base/frameworks/intel/main.bro.html#type-Intel::Type>`_.
-* meta.source: An arbitrary string value representing the data source. This value is used as unique key to identify a metadata record in the scope of a single intelligence item.
+* meta.source: An arbitrary string value representing the data source. This value is used as a unique key to identify a metadata record in the scope of a single intelligence item.
 * meta.desc: A freeform description for the data.
 * meta.url: A URL for more information about the data.
 
@@ -113,7 +113,7 @@ Page to add a Critical Stack client on a Bro instance :
   :width: 70%
 
 * API Key: API Key of your Sensor.
-* Schedulled pull: Give a crontab for planning pull of intel from feeds.
+* Schedulled pull: Give a crontab to plan a pull of intel from feeds.
 * Bros: Select Bro instances to apply.
 
 Page of an instance :
@@ -124,13 +124,13 @@ Page of an instance :
   :width: 80%
 
 * 'Uptime' Indicate the time elapsed since the last time the application was started.
-* 'Refresh Instance Status' is a button to know the status of the application. (running or not)
-* 'Update instance', you need to edit the conf file to change the version number you want.
+* 'Refresh Instance Status' is a button to know the status of the application (running or not).
+* 'Update instance', you need to edit the configuration file to change the version number you want.
 * 'Deploy configuration', copy configuration files to the remote server, and reload the Bro instance.
 * 'Deploy rules', copy rules (signatures and scripts) files to the remote server, and reload the Bro instance.
 
 Miscellaneous
 -------------
 
-The problem with Bro scripts is that they are not necessarily independent of each other, which is complicated to test them.
-TODO : To solve this problem, it would be necessary to test all the scripts of an instance at the same time.
+The problem with Bro scripts is that they are not necessarily independent of each other, which is why it's complicated to test them.
+TODO : To solve this problem, it will be necessary to test all the scripts of an instance at the same time.

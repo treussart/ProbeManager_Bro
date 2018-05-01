@@ -1,4 +1,3 @@
-import json
 import logging
 
 from django import forms
@@ -6,9 +5,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
-from django_celery_beat.models import PeriodicTask
 
-from core.utils import create_deploy_rules_task, create_check_task
 from core.utils import generic_import_csv
 from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel, CriticalStack
@@ -16,7 +13,7 @@ from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Int
 logger = logging.getLogger(__name__)
 
 
-class MarkedRuleMixin(admin.ModelAdmin):
+class RuleMixin(admin.ModelAdmin):
     def make_enabled(self, request, queryset):
         rows_updated = queryset.update(enabled=True)
         if rows_updated == 1:
@@ -36,22 +33,38 @@ class MarkedRuleMixin(admin.ModelAdmin):
     make_enabled.short_description = "Mark rule as enabled"
     make_disabled.short_description = "Mark rule as disabled"
 
+    class UpdateActionForm(ActionForm):
+        ruleset = forms.ModelChoiceField(queryset=RuleSetBro.get_all(), empty_label="Select a ruleset",
+                                         required=False)
+
+    class Media:
+        js = (
+            'bro/js/mask-ruleset-field.js',
+        )
+
+    def test(self, request, obj):
+        test = True
+        errors = list()
+        for rule in obj:
+            response = rule.test_all()
+            if not response['status']:
+                test = False
+                errors.append(str(rule) + " : " + str(response['errors']))
+        if test:
+            messages.add_message(request, messages.SUCCESS, "Test OK")
+        else:
+            messages.add_message(request, messages.ERROR, "Test failed ! " + str(errors))
+
 
 class RuleSetBroAdmin(admin.ModelAdmin):
     def test_rules(self, request, obj):
         test = True
         errors = list()
         for ruleset in obj:
-            for signature in ruleset.signatures.all():
-                response = signature.test()
-                if not response['status']:
-                    test = False
-                    errors.append(str(signature) + " : " + str(response['errors']))
-            for script in ruleset.scripts.all():
-                response = script.test()
-                if not response['status']:
-                    test = False
-                    errors.append(str(script) + " : " + str(response['errors']))
+            response = ruleset.test_rules()
+            if not response['status']:
+                test = False
+                errors.append(response['errors'])
         if test:
             messages.add_message(request, messages.SUCCESS, "Test rules OK")
         else:
@@ -73,38 +86,6 @@ class BroAdmin(admin.ModelAdmin):
         else:
             return BroChangeForm
 
-    def delete(self, request, obj, probe=None):
-        if probe is None:
-            probe = obj
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=probe.name + "_deploy_rules_" + str(probe.scheduled_rules_deployment_crontab))
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        try:
-            periodic_task = PeriodicTask.objects.get(name=probe.name + "_check_task")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        messages.add_message(request, messages.SUCCESS, "Bro instance " + probe.name + " deleted")
-        super().delete_model(request, obj)
-
-    def save_model(self, request, obj, form, change):
-        logger.debug("create scheduled for " + str(obj))
-        create_deploy_rules_task(obj)
-        create_check_task(obj)
-        super().save_model(request, obj, form, change)
-
-    def delete_model(self, request, obj):
-        self.delete(request, obj)
-
-    def delete_selected(self, request, obj):
-        for probe in obj:
-            self.delete(request, obj, probe=probe)
-
     def test_rules(self, request, obj):
         test = True
         errors = list()
@@ -118,51 +99,39 @@ class BroAdmin(admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
 
-    actions = [delete_selected, test_rules]
+    actions = [test_rules]
 
 
-class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
-    class Media:
-        js = (
-            'bro/js/mask-ruleset-field.js',
-        )
-
+class ScriptBroAdmin(RuleMixin, admin.ModelAdmin):
     def add_ruleset(self, request, queryset):
         ruleset_id = request.POST['ruleset']
         if ruleset_id:
             ruleset = RuleSetBro.get_by_id(ruleset_id)
-            for script in queryset:
-                ruleset.scripts.add(script)
+            for signature in queryset:
+                ruleset.scripts.add(signature)
             ruleset.save()
-
-    add_ruleset.short_description = 'Add ruleset'
+            messages.add_message(request, messages.SUCCESS, "Added to Ruleset "
+                                 + ruleset.name + " successfully !")
 
     def remove_ruleset(self, request, queryset):
         ruleset_id = request.POST['ruleset']
         if ruleset_id:
             ruleset = RuleSetBro.get_by_id(ruleset_id)
-            for script in queryset:
-                ruleset.scripts.remove(script)
+            for signature in queryset:
+                ruleset.scripts.remove(signature)
             ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Removed from Ruleset "
+                                 + ruleset.name + " successfully !")
 
+    add_ruleset.short_description = 'Add ruleset'
     remove_ruleset.short_description = 'Remove ruleset'
-
-    class UpdateActionForm(ActionForm):
-        ruleset = forms.ModelChoiceField(queryset=RuleSetBro.get_all(), empty_label="Select a ruleset",
-                                         required=False)
-
-    def test_scripts(self, request, obj):
-        test = True
-        errors = list()
-        for script in obj:
-            response = script.test_all()
-            if not response['status']:
-                test = False
-                errors.append(str(script) + " : " + str(response['errors']))
-        if test:
-            messages.add_message(request, messages.SUCCESS, "Test scripts OK")
-        else:
-            messages.add_message(request, messages.ERROR, "Test scripts failed ! " + str(errors))
+    RuleMixin.test.short_description = "Test Script"
+    search_fields = ('rule_full',)
+    list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
+    list_display = ('name', 'enabled')
+    action_form = RuleMixin.UpdateActionForm
+    actions = [RuleMixin.make_enabled, RuleMixin.make_disabled,
+               add_ruleset, remove_ruleset, RuleMixin.test]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -172,20 +141,8 @@ class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test script failed ! " + str(response['errors']))
 
-    search_fields = ('rule_full',)
-    list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
-    list_display = ('name', 'enabled')
-    action_form = UpdateActionForm
-    actions = [MarkedRuleMixin.make_enabled, MarkedRuleMixin.make_disabled,
-               add_ruleset, remove_ruleset, test_scripts]
 
-
-class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
-    class Media:
-        js = (
-            'bro/js/mask-ruleset-field.js',
-        )
-
+class SignatureBroAdmin(RuleMixin, admin.ModelAdmin):
     def add_ruleset(self, request, queryset):
         ruleset_id = request.POST['ruleset']
         if ruleset_id:
@@ -193,8 +150,8 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
             for signature in queryset:
                 ruleset.signatures.add(signature)
             ruleset.save()
-
-    add_ruleset.short_description = 'Add ruleset'
+            messages.add_message(request, messages.SUCCESS, "Added to Ruleset "
+                                 + ruleset.name + " successfully !")
 
     def remove_ruleset(self, request, queryset):
         ruleset_id = request.POST['ruleset']
@@ -203,25 +160,18 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
             for signature in queryset:
                 ruleset.signatures.remove(signature)
             ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Removed from Ruleset "
+                                 + ruleset.name + " successfully !")
 
+    add_ruleset.short_description = 'Add ruleset'
     remove_ruleset.short_description = 'Remove ruleset'
-
-    class UpdateActionForm(ActionForm):
-        ruleset = forms.ModelChoiceField(queryset=RuleSetBro.get_all(), empty_label="Select a ruleset",
-                                         required=False)
-
-    def test_signatures(self, request, obj):
-        test = True
-        errors = list()
-        for signature in obj:
-            response = signature.test_all()
-            if not response['status']:
-                test = False
-                errors.append(str(signature) + " : " + str(response['errors']))
-        if test:
-            messages.add_message(request, messages.SUCCESS, "Test signatures OK")
-        else:
-            messages.add_message(request, messages.ERROR, "Test signatures failed ! " + str(errors))
+    RuleMixin.test.short_description = "Test Signature"
+    search_fields = ('rule_full',)
+    list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
+    list_display = ('msg', 'enabled')
+    action_form = RuleMixin.UpdateActionForm
+    actions = [RuleMixin.make_enabled, RuleMixin.make_disabled,
+               add_ruleset, remove_ruleset, RuleMixin.test]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -230,13 +180,6 @@ class SignatureBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
             messages.add_message(request, messages.SUCCESS, "Test signature OK")
         else:
             messages.add_message(request, messages.ERROR, "Test signature failed ! " + str(response['errors']))
-
-    search_fields = ('rule_full',)
-    list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
-    list_display = ('msg', 'enabled')
-    action_form = UpdateActionForm
-    actions = [MarkedRuleMixin.make_enabled, MarkedRuleMixin.make_disabled,
-               add_ruleset, remove_ruleset, test_signatures]
 
 
 class ConfigurationAdmin(admin.ModelAdmin):
@@ -276,29 +219,6 @@ class IntelAdmin(admin.ModelAdmin):
 
 
 class CriticalStackAdmin(admin.ModelAdmin):
-    def save_model(self, request, obj, form, change):
-        logger.debug("create scheduled task for " + str(obj))
-        PeriodicTask.objects.create(crontab=obj.scheduled_pull,
-                                    name=str(obj) + "_deploy_critical_stack",
-                                    task='bro.tasks.deploy_critical_stack',
-                                    args=json.dumps([obj.api_key, ])
-                                    )
-        super().save_model(request, obj, form, change)
-
-    def delete(self, request, obj):
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=str(obj) + "_deploy_critical_stack")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        messages.add_message(request, messages.SUCCESS, "Critical stack instance " + str(obj) + " deleted")
-        super().delete_model(request, obj)
-
-    def delete_model(self, request, obj):
-        self.delete(request, obj)
-
     list_display = ('__str__',)
     list_display_links = None
 

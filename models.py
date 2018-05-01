@@ -1,5 +1,6 @@
 import csv
 import hashlib
+import json
 import logging
 import os
 import re
@@ -13,12 +14,12 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django_celery_beat.models import CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from core.models import Probe, ProbeConfiguration
 from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
-from core.utils import process_cmd
+from core.utils import process_cmd, create_deploy_rules_task, create_check_task
 from rules.models import RuleSet, Rule
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,6 @@ class SignatureBro(Rule):
     Stores a signature Bro compatible. (pattern matching), see https://www.bro.org/sphinx/frameworks/signatures.html
     """
     msg = models.CharField(max_length=1000, unique=True)
-    pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -141,7 +141,7 @@ class SignatureBro(Rule):
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
+                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
                    '-s', rule_file
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -166,7 +166,7 @@ class SignatureBro(Rule):
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
-        if self.pcap_success:
+        if self.file_test_success:
             response_pcap = self.test_pcap()
             if not response_pcap['status']:
                 test = False
@@ -182,7 +182,6 @@ class ScriptBro(Rule):
     Stores a script Bro compatible. see : https://www.bro.org/sphinx/scripting/index.html#understanding-bro-scripts
     """
     name = models.CharField(max_length=100, unique=True, verbose_name="msg in notice")
-    pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __str__(self):
         return self.name
@@ -223,7 +222,7 @@ class ScriptBro(Rule):
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
+                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
                    rule_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
@@ -249,7 +248,7 @@ class ScriptBro(Rule):
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
-        if self.pcap_success:
+        if self.file_test_success:
             response_pcap = self.test_pcap()
             if not response_pcap['status']:
                 test = False
@@ -280,6 +279,23 @@ class RuleSetBro(RuleSet):
     def __str__(self):
         return self.name
 
+    def test_rules(self):
+        test = True
+        errors = list()
+        for signature in self.signatures.all():
+            response = signature.test()
+            if not response['status']:
+                test = False
+                errors.append(str(signature) + " : " + str(response['errors']))
+        for script in self.scripts.all():
+            response = script.test()
+            if not response['status']:
+                test = False
+                errors.append(str(script) + " : " + str(response['errors']))
+        if not test:
+            return {'status': False, 'errors': str(errors)}
+        return {'status': True}
+
 
 class Bro(Probe):
     """
@@ -294,6 +310,27 @@ class Bro(Probe):
 
     def __str__(self):
         return self.name + " : " + self.description
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        create_deploy_rules_task(self)
+        create_check_task(self)
+
+    def delete(self, **kwargs):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=self.name + "_deploy_rules_" + str(self.scheduled_rules_deployment_crontab))
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        try:
+            periodic_task = PeriodicTask.objects.get(name=self.name + "_check_task")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        return super().delete(**kwargs)
 
     def install(self, version=settings.BRO_VERSION):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
@@ -641,3 +678,21 @@ class CriticalStack(models.Model):
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True, 'message': str(success)}
+
+    def delete(self, **kwargs):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=str(self) + "_deploy_critical_stack")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        return super().delete(**kwargs)
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        PeriodicTask.objects.create(crontab=self.scheduled_pull,
+                                    name=str(self) + "_deploy_critical_stack",
+                                    task='bro.tasks.deploy_critical_stack',
+                                    args=json.dumps([self.api_key, ])
+                                    )

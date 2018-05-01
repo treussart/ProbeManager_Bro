@@ -8,15 +8,15 @@
         "rule_full": "##! FTP brute-forcing detector, triggering when too many rejected usernames or\r\n##! failed passwords have occurred from a single address.\r\n\r\n@load base/protocols/ftp\r\n@load base/frameworks/sumstats\r\n\r\n@load base/utils/time\r\n\r\nmodule FTP;\r\n\r\nexport {\r\n\tredef enum Notice::Type += {\r\n\t\t## Indicates a host bruteforcing FTP logins by watching for too\r\n\t\t## many rejected usernames or failed passwords.\r\n\t\tBruteforcing\r\n\t};\r\n\r\n\t## How many rejected usernames or passwords are required before being\r\n\t## considered to be bruteforcing.\r\n\tconst bruteforce_threshold: double = 20 &redef;\r\n\r\n\t## The time period in which the threshold needs to be crossed before\r\n\t## being reset.\r\n\tconst bruteforce_measurement_interval = 15mins &redef;\r\n}\r\n\r\n\r\nevent bro_init()\r\n\t{\r\n\tlocal r1: SumStats::Reducer = [$stream=\"ftp.failed_auth\", $apply=set(SumStats::UNIQUE), $unique_max=double_to_count(bruteforce_threshold+2)];\r\n\tSumStats::create([$name=\"ftp-detect-bruteforcing\",\r\n\t                  $epoch=bruteforce_measurement_interval,\r\n\t                  $reducers=set(r1),\r\n\t                  $threshold_val(key: SumStats::Key, result: SumStats::Result) =\r\n\t                  \t{\r\n\t                  \treturn result[\"ftp.failed_auth\"]$num+0.0;\r\n\t                  \t},\r\n\t                  $threshold=bruteforce_threshold,\r\n\t                  $threshold_crossed(key: SumStats::Key, result: SumStats::Result) =\r\n\t                  \t{\r\n\t                  \tlocal r = result[\"ftp.failed_auth\"];\r\n\t                  \tlocal dur = duration_to_mins_secs(r$end-r$begin);\r\n\t                  \tlocal plural = r$unique>1 ? \"s\" : \"\";\r\n\t                  \tlocal message = fmt(\"%s had %d failed logins on %d FTP server%s in %s\", key$host, r$num, r$unique, plural, dur);\r\n\t                  \tNOTICE([$note=FTP::Bruteforcing,\r\n\t                  \t        $src=key$host,\r\n\t                  \t        $msg=message,\r\n\t                  \t        $identifier=cat(key$host)]);\r\n\t                  \t}]);\r\n\t}\r\n\r\nevent ftp_reply(c: connection, code: count, msg: string, cont_resp: bool)\r\n\t{\r\n\tlocal cmd = c$ftp$cmdarg$cmd;\r\n\tif ( cmd == \"USER\" || cmd == \"PASS\" )\r\n\t\t{\r\n\t\tif ( FTP::parse_ftp_reply_code(code)$x == 5 )\r\n\t\t\tSumStats::observe(\"ftp.failed_auth\", [$host=c$id$orig_h], [$str=cat(c$id$resp_h)]);\r\n\t\t}\r\n\t}",
         "enabled": true,
         "created_date": "2018-04-12T18:43:36.699Z",
-        "updated_date": "2018-04-12T18:43:36.699Z"
+        "updated_date": "2018-04-12T18:43:36.699Z",
+        "file_test_success": ""
     }
 },
 {
     "model": "bro.scriptbro",
     "pk": 102,
     "fields": {
-        "name": "The hash value of a file transferred over HTTP matched",
-        "pcap_success": ""
+        "name": "The hash value of a file transferred over HTTP matched"
     }
 }
 ]
