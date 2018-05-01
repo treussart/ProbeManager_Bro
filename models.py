@@ -19,7 +19,7 @@ from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from core.models import Probe, ProbeConfiguration
 from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
-from core.utils import process_cmd
+from core.utils import process_cmd, create_deploy_rules_task, create_check_task
 from rules.models import RuleSet, Rule
 
 logger = logging.getLogger(__name__)
@@ -533,6 +533,11 @@ class Bro(Probe):
             return {'status': deploy}
         else:  # pragma: no cover
             return {'status': deploy, 'errors': errors}
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        create_deploy_rules_task(self)
+        create_check_task(self)
 
     def delete(self, **kwargs):
         try:
