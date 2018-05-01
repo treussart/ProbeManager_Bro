@@ -13,7 +13,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django_celery_beat.models import CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from core.models import Probe, ProbeConfiguration
 from core.modelsmixins import CommonMixin
@@ -280,6 +280,23 @@ class RuleSetBro(RuleSet):
     def __str__(self):
         return self.name
 
+    def test_rules(self):
+        test = True
+        errors = list()
+        for signature in self.signatures.all():
+            response = signature.test()
+            if not response['status']:
+                test = False
+                errors.append(str(signature) + " : " + str(response['errors']))
+        for script in self.scripts.all():
+            response = script.test()
+            if not response['status']:
+                test = False
+                errors.append(str(script) + " : " + str(response['errors']))
+        if not test:
+            return {'status': False, 'errors': str(errors)}
+        return {'status': True}
+
 
 class Bro(Probe):
     """
@@ -516,6 +533,22 @@ class Bro(Probe):
         else:  # pragma: no cover
             return {'status': deploy, 'errors': errors}
 
+    def delete(self, **kwargs):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=self.name + "_deploy_rules_" + str(self.scheduled_rules_deployment_crontab))
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        try:
+            periodic_task = PeriodicTask.objects.get(name=self.name + "_check_task")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        return super().delete(**kwargs)
+
 
 class Intel(CommonMixin, models.Model):
     """
@@ -641,3 +674,13 @@ class CriticalStack(models.Model):
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True, 'message': str(success)}
+
+    def delete(self, **kwargs):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=str(self) + "_deploy_critical_stack")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        return super().delete(**kwargs)

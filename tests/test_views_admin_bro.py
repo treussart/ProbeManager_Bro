@@ -85,7 +85,15 @@ class ViewsBroAdminTest(TestCase):
                                     {'action': 'delete_selected',
                                      '_selected_action': Bro.get_by_name('test').id}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Bro instance test deleted", str(response.content))
+        self.assertIn('Are you sure you want to delete the selected ', str(response.content))
+        response = self.client.post('/admin/bro/bro/',
+                                    {'action': 'delete_selected',
+                                     '_selected_action': Bro.get_by_name('test').id,
+                                     'post': 'yes'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Successfully deleted 1 ', str(response.content))
+
         self.assertEqual(len(Bro.get_all()), 1)
 
         response = self.client.post('/admin/bro/bro/add/', {'name': 'test',
@@ -107,5 +115,5 @@ class ViewsBroAdminTest(TestCase):
         response = self.client.post('/admin/bro/bro/' + str(Bro.get_by_name('test').id) + '/delete/',
                                     {'post': 'yes'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Bro instance test deleted", str(response.content))
+        self.assertIn('was deleted successfully', str(response.content))
         self.assertEqual(len(Bro.get_all()), 1)

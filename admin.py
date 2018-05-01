@@ -42,16 +42,10 @@ class RuleSetBroAdmin(admin.ModelAdmin):
         test = True
         errors = list()
         for ruleset in obj:
-            for signature in ruleset.signatures.all():
-                response = signature.test()
-                if not response['status']:
-                    test = False
-                    errors.append(str(signature) + " : " + str(response['errors']))
-            for script in ruleset.scripts.all():
-                response = script.test()
-                if not response['status']:
-                    test = False
-                    errors.append(str(script) + " : " + str(response['errors']))
+            response = ruleset.test_rules()
+            if not response['status']:
+                test = False
+                errors.append(response['errors'])
         if test:
             messages.add_message(request, messages.SUCCESS, "Test rules OK")
         else:
@@ -73,37 +67,11 @@ class BroAdmin(admin.ModelAdmin):
         else:
             return BroChangeForm
 
-    def delete(self, request, obj, probe=None):
-        if probe is None:
-            probe = obj
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=probe.name + "_deploy_rules_" + str(probe.scheduled_rules_deployment_crontab))
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        try:
-            periodic_task = PeriodicTask.objects.get(name=probe.name + "_check_task")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        messages.add_message(request, messages.SUCCESS, "Bro instance " + probe.name + " deleted")
-        super().delete_model(request, obj)
-
     def save_model(self, request, obj, form, change):
         logger.debug("create scheduled for " + str(obj))
         create_deploy_rules_task(obj)
         create_check_task(obj)
         super().save_model(request, obj, form, change)
-
-    def delete_model(self, request, obj):
-        self.delete(request, obj)
-
-    def delete_selected(self, request, obj):
-        for probe in obj:
-            self.delete(request, obj, probe=probe)
 
     def test_rules(self, request, obj):
         test = True
@@ -118,7 +86,7 @@ class BroAdmin(admin.ModelAdmin):
         else:
             messages.add_message(request, messages.ERROR, "Test rules failed ! " + str(errors))
 
-    actions = [delete_selected, test_rules]
+    actions = [test_rules]
 
 
 class ScriptBroAdmin(MarkedRuleMixin, admin.ModelAdmin):
@@ -284,20 +252,6 @@ class CriticalStackAdmin(admin.ModelAdmin):
                                     args=json.dumps([obj.api_key, ])
                                     )
         super().save_model(request, obj, form, change)
-
-    def delete(self, request, obj):
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=str(obj) + "_deploy_critical_stack")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        messages.add_message(request, messages.SUCCESS, "Critical stack instance " + str(obj) + " deleted")
-        super().delete_model(request, obj)
-
-    def delete_model(self, request, obj):
-        self.delete(request, obj)
 
     list_display = ('__str__',)
     list_display_links = None

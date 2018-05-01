@@ -20,7 +20,7 @@ class ConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = ConfigurationSerializer
 
 
-class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Bro.objects.all()
     serializer_class = BroSerializer
 
@@ -34,24 +34,6 @@ class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gene
             create_check_task(bro)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        bro = self.get_object()
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=bro.name + "_deploy_rules_" + str(bro.scheduled_rules_deployment_crontab))
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        try:
-            periodic_task = PeriodicTask.objects.get(name=bro.name + "_check_task")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        bro.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, pk=None):
         bro = self.get_object()
@@ -90,7 +72,8 @@ class IntelViewSet(viewsets.ModelViewSet):
     serializer_class = IntelSerializer
 
 
-class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
+                           viewsets.GenericViewSet):
     queryset = CriticalStack.objects.all()
     serializer_class = CriticalStackSerializer
 
@@ -107,15 +90,3 @@ class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, vie
                                         )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        critical_stack = self.get_object()
-        try:
-            periodic_task = PeriodicTask.objects.get(
-              name=str(critical_stack) + "_deploy_critical_stack")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        critical_stack.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
