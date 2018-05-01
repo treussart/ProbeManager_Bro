@@ -313,6 +313,27 @@ class Bro(Probe):
     def __str__(self):
         return self.name + " : " + self.description
 
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        create_deploy_rules_task(self)
+        create_check_task(self)
+
+    def delete(self, **kwargs):
+        try:
+            periodic_task = PeriodicTask.objects.get(
+                name=self.name + "_deploy_rules_" + str(self.scheduled_rules_deployment_crontab))
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        try:
+            periodic_task = PeriodicTask.objects.get(name=self.name + "_check_task")
+            periodic_task.delete()
+            logger.debug(str(periodic_task) + " deleted")
+        except PeriodicTask.DoesNotExist:  # pragma: no cover
+            pass
+        return super().delete(**kwargs)
+
     def install(self, version=settings.BRO_VERSION):
         if self.server.os.name == 'debian' or self.server.os.name == 'ubuntu':
             install_script = """
@@ -533,27 +554,6 @@ class Bro(Probe):
             return {'status': deploy}
         else:  # pragma: no cover
             return {'status': deploy, 'errors': errors}
-
-    def save(self, **kwargs):
-        super().save(**kwargs)
-        create_deploy_rules_task(self)
-        create_check_task(self)
-
-    def delete(self, **kwargs):
-        try:
-            periodic_task = PeriodicTask.objects.get(
-                name=self.name + "_deploy_rules_" + str(self.scheduled_rules_deployment_crontab))
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        try:
-            periodic_task = PeriodicTask.objects.get(name=self.name + "_check_task")
-            periodic_task.delete()
-            logger.debug(str(periodic_task) + " deleted")
-        except PeriodicTask.DoesNotExist:  # pragma: no cover
-            pass
-        return super().delete(**kwargs)
 
 
 class Intel(CommonMixin, models.Model):

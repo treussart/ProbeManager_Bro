@@ -18,26 +18,9 @@ class ConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = ConfigurationSerializer
 
 
-class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
-                 mixins.CreateModelMixin, viewsets.GenericViewSet):
+class BroViewSet(viewsets.ModelViewSet):
     queryset = Bro.objects.all()
     serializer_class = BroSerializer
-
-    def update(self, request, pk=None):
-        bro = self.get_object()
-        serializer = BroUpdateSerializer(bro, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def partial_update(self, request, pk=None):
-        bro = self.get_object()
-        serializer = BroUpdateSerializer(bro, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignatureBroViewSet(viewsets.ModelViewSet):
