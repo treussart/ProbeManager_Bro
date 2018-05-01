@@ -115,7 +115,7 @@ class ViewsScriptAdminTest(TestCase):
                 response = self.client.post('/admin/bro/scriptbro/add/', {'rev': '1',
                                                                           'rule_full': str(s.read().replace('\r', '')),
                                                                           'name': 'failed logins',
-                                                                          'pcap_success': f,
+                                                                          'file_test_success': f,
                                                                           },
                                             follow=True)
         self.assertEqual(response.status_code, 200)
@@ -141,7 +141,7 @@ class ViewsScriptAdminTest(TestCase):
                                                                           'rule_full': str(
                                                                                  s.read().replace('\r', '')),
                                                                           'name': 'failed logins',
-                                                                          'pcap_success': f,
+                                                                          'file_test_success': f,
                                                                           },
                                             follow=True)
         self.assertEqual(response.status_code, 200)

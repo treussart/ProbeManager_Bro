@@ -80,7 +80,6 @@ class SignatureBro(Rule):
     Stores a signature Bro compatible. (pattern matching), see https://www.bro.org/sphinx/frameworks/signatures.html
     """
     msg = models.CharField(max_length=1000, unique=True)
-    pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,7 +141,7 @@ class SignatureBro(Rule):
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
+                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
                    '-s', rule_file
                    ]
             process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -167,7 +166,7 @@ class SignatureBro(Rule):
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
-        if self.pcap_success:
+        if self.file_test_success:
             response_pcap = self.test_pcap()
             if not response_pcap['status']:
                 test = False
@@ -183,7 +182,6 @@ class ScriptBro(Rule):
     Stores a script Bro compatible. see : https://www.bro.org/sphinx/scripting/index.html#understanding-bro-scripts
     """
     name = models.CharField(max_length=100, unique=True, verbose_name="msg in notice")
-    pcap_success = models.FileField(name='pcap_success', upload_to='pcap_success', blank=True)
 
     def __str__(self):
         return self.name
@@ -224,7 +222,7 @@ class ScriptBro(Rule):
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.pcap_success.name,
+                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
                    rule_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
@@ -250,7 +248,7 @@ class ScriptBro(Rule):
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
-        if self.pcap_success:
+        if self.file_test_success:
             response_pcap = self.test_pcap()
             if not response_pcap['status']:
                 test = False

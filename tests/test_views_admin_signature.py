@@ -129,7 +129,7 @@ class ViewsSignatureAdminTest(TestCase):
                                              'rule_full': str(s.read().replace('\r', '')),
                                              'sid': '767',
                                              'msg': 'Found root!',
-                                             'pcap_success': f,
+                                             'file_test_success': f,
                                              },
                                             follow=True)
         self.assertEqual(response.status_code, 200)
@@ -156,7 +156,7 @@ class ViewsSignatureAdminTest(TestCase):
                                              'rule_full': str(s.read().replace('\r', '')),
                                              'sid': '768',
                                              'msg': 'Found root!',
-                                             'pcap_success': f,
+                                             'file_test_success': f,
                                              }, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Test signature failed !', str(response.content))
