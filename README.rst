@@ -53,14 +53,14 @@ Usage
 Administration Page of the module :
 -----------------------------------
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-index.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/admin-index.png
   :align: center
   :width: 80%
 
 Page to add a Bro IDS instance :
 --------------------------------
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-bro-add.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/admin-bro-add.png
   :align: center
   :width: 70%
 
@@ -78,7 +78,7 @@ Page to add a configuration :
 
 Allows you to modify the `Bro configuration <https://www.bro.org/sphinx/quickstart/index.html#a-minimal-starting-configuration>`_.
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-conf-add.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/admin-conf-add.png
   :align: center
   :width: 80%
 
@@ -92,7 +92,7 @@ Page to add a Bro Intel :
 
 Allows you to add a `Bro Intel <https://www.bro.org/sphinx-git/frameworks/intel.html>`_.
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-intel-add.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/admin-intel-add.png
   :align: center
   :width: 60%
 
@@ -108,7 +108,7 @@ Page to add a Critical Stack client on a Bro instance :
 
 `Critical Stack client <https://criticalstack.zendesk.com/hc/en-us/articles/203408139-Full-Documentation-all-the-things->`_.
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/admin-criticalstack-add.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/admin-criticalstack-add.png
   :align: center
   :width: 70%
 
@@ -119,7 +119,7 @@ Page to add a Critical Stack client on a Bro instance :
 Page of an instance :
 ---------------------
 
-.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/develop/data/instance-index.png
+.. image:: https://raw.githubusercontent.com/treussart/ProbeManager_Bro/master/data/instance-index.png
   :align: center
   :width: 80%
 
