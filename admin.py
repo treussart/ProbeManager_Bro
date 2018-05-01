@@ -244,15 +244,6 @@ class IntelAdmin(admin.ModelAdmin):
 
 
 class CriticalStackAdmin(admin.ModelAdmin):
-    def save_model(self, request, obj, form, change):
-        logger.debug("create scheduled task for " + str(obj))
-        PeriodicTask.objects.create(crontab=obj.scheduled_pull,
-                                    name=str(obj) + "_deploy_critical_stack",
-                                    task='bro.tasks.deploy_critical_stack',
-                                    args=json.dumps([obj.api_key, ])
-                                    )
-        super().save_model(request, obj, form, change)
-
     list_display = ('__str__',)
     list_display_links = None
 

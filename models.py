@@ -1,5 +1,6 @@
 import csv
 import hashlib
+import json
 import logging
 import os
 import re
@@ -684,3 +685,11 @@ class CriticalStack(models.Model):
         except PeriodicTask.DoesNotExist:  # pragma: no cover
             pass
         return super().delete(**kwargs)
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        PeriodicTask.objects.create(crontab=self.scheduled_pull,
+                                    name=str(self) + "_deploy_critical_stack",
+                                    task='bro.tasks.deploy_critical_stack',
+                                    args=json.dumps([self.api_key, ])
+                                    )

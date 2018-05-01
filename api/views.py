@@ -72,21 +72,6 @@ class IntelViewSet(viewsets.ModelViewSet):
     serializer_class = IntelSerializer
 
 
-class CriticalStackViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
-                           viewsets.GenericViewSet):
+class CriticalStackViewSet(viewsets.ModelViewSet):
     queryset = CriticalStack.objects.all()
     serializer_class = CriticalStackSerializer
-
-    def create(self, request):
-        serializer = CriticalStackSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            criticalstack = CriticalStack.objects.get(api_key=request.data['api_key'])
-            logger.debug("create scheduled task for " + str(criticalstack))
-            PeriodicTask.objects.create(crontab=CrontabSchedule.objects.get(id=request.data['scheduled_pull']),
-                                        name=str(criticalstack) + "_deploy_critical_stack",
-                                        task='bro.tasks.deploy_critical_stack',
-                                        args=json.dumps([request.data['api_key'], ])
-                                        )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
