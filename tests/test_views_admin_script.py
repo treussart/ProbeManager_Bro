@@ -66,18 +66,18 @@ class ViewsScriptAdminTest(TestCase):
         self.assertFalse(ScriptBro.get_by_name('The hash value of a file transferred over HTTP matched').enabled)
 
         response = self.client.post('/admin/bro/scriptbro/',
-                                    {'action': 'test_scripts',
+                                    {'action': 'test',
                                      '_selected_action': ScriptBro.get_by_name('The hash value of a file '
                                                                                'transferred over HTTP matched').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test scripts OK', str(response.content))
+        self.assertIn('Test OK', str(response.content))
         response = self.client.post('/admin/bro/scriptbro/',
-                                    {'action': 'test_scripts',
+                                    {'action': 'test',
                                      '_selected_action': ScriptBro.get_by_name('fail script test').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test scripts failed !', str(response.content))
+        self.assertIn('Test failed !', str(response.content))
 
         response = self.client.post('/admin/bro/scriptbro/',
                                     {'action': 'delete_selected',
@@ -122,11 +122,11 @@ class ViewsScriptAdminTest(TestCase):
         self.assertIn('Test script OK', str(response.content))
         self.assertEqual(len(ScriptBro.get_all()), 1)
         response = self.client.post('/admin/bro/scriptbro/',
-                                    {'action': 'test_scripts',
+                                    {'action': 'test',
                                      '_selected_action': ScriptBro.get_by_name('failed logins').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test scripts OK', str(response.content))
+        self.assertIn('Test OK', str(response.content))
         response = self.client.post('/admin/bro/scriptbro/',
                                     {'action': 'delete_selected',
                                      '_selected_action': ScriptBro.get_by_name('failed logins').id,
@@ -148,11 +148,11 @@ class ViewsScriptAdminTest(TestCase):
         self.assertIn('Test script failed !', str(response.content))
         self.assertEqual(len(ScriptBro.get_all()), 1)
         response = self.client.post('/admin/bro/scriptbro/',
-                                    {'action': 'test_scripts',
+                                    {'action': 'test',
                                      '_selected_action': ScriptBro.get_by_name('failed logins').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test scripts failed', str(response.content))
+        self.assertIn('Test failed', str(response.content))
 
         response = self.client.post('/admin/bro/scriptbro/',
                                     {'action': 'add_ruleset',

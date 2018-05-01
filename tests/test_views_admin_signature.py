@@ -72,17 +72,17 @@ class ViewsSignatureAdminTest(TestCase):
         self.assertTrue(SignatureBro.get_by_msg('fail test').enabled)
 
         response = self.client.post('/admin/bro/signaturebro/',
-                                    {'action': 'test_signatures',
+                                    {'action': 'test',
                                      '_selected_action': SignatureBro.get_by_msg('Found root!').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test signatures OK', str(response.content))
+        self.assertIn('Test OK', str(response.content))
         response = self.client.post('/admin/bro/signaturebro/',
-                                    {'action': 'test_signatures',
+                                    {'action': 'test',
                                      '_selected_action': SignatureBro.get_by_msg('fail test').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test signatures failed !', str(response.content))
+        self.assertIn('Test failed !', str(response.content))
 
         response = self.client.post('/admin/bro/signaturebro/',
                                     {'action': 'add_ruleset',
@@ -136,11 +136,11 @@ class ViewsSignatureAdminTest(TestCase):
         self.assertIn('Test signature OK', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 1)
         response = self.client.post('/admin/bro/signaturebro/',
-                                    {'action': 'test_signatures',
+                                    {'action': 'test',
                                      '_selected_action': SignatureBro.get_by_msg('Found root!').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test signatures OK', str(response.content))
+        self.assertIn('Test OK', str(response.content))
         response = self.client.post('/admin/bro/signaturebro/',
                                     {'action': 'delete_selected',
                                      '_selected_action': SignatureBro.get_by_msg('Found root!').id,
@@ -162,8 +162,8 @@ class ViewsSignatureAdminTest(TestCase):
         self.assertIn('Test signature failed !', str(response.content))
         self.assertEqual(len(SignatureBro.get_all()), 1)
         response = self.client.post('/admin/bro/signaturebro/',
-                                    {'action': 'test_signatures',
+                                    {'action': 'test',
                                      '_selected_action': SignatureBro.get_by_msg('Found root!').id},
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Test signatures failed !', str(response.content))
+        self.assertIn('Test failed !', str(response.content))

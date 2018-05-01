@@ -33,29 +33,6 @@ class RuleMixin(admin.ModelAdmin):
     make_enabled.short_description = "Mark rule as enabled"
     make_disabled.short_description = "Mark rule as disabled"
 
-    def add_ruleset(self, request, queryset):
-        ruleset_id = request.POST['ruleset']
-        if ruleset_id:
-            ruleset = RuleSetBro.get_by_id(ruleset_id)
-            for signature in queryset:
-                ruleset.signatures.add(signature)
-            ruleset.save()
-            messages.add_message(request, messages.SUCCESS, "Added to Ruleset "
-                                 + ruleset.name + " successfully !")
-
-    def remove_ruleset(self, request, queryset):
-        ruleset_id = request.POST['ruleset']
-        if ruleset_id:
-            ruleset = RuleSetBro.get_by_id(ruleset_id)
-            for signature in queryset:
-                ruleset.signatures.remove(signature)
-            ruleset.save()
-            messages.add_message(request, messages.SUCCESS, "Removed from Ruleset "
-                                 + ruleset.name + " successfully !")
-
-    add_ruleset.short_description = 'Add ruleset'
-    remove_ruleset.short_description = 'Remove ruleset'
-
     class UpdateActionForm(ActionForm):
         ruleset = forms.ModelChoiceField(queryset=RuleSetBro.get_all(), empty_label="Select a ruleset",
                                          required=False)
@@ -126,13 +103,35 @@ class BroAdmin(admin.ModelAdmin):
 
 
 class ScriptBroAdmin(RuleMixin, admin.ModelAdmin):
+    def add_ruleset(self, request, queryset):
+        ruleset_id = request.POST['ruleset']
+        if ruleset_id:
+            ruleset = RuleSetBro.get_by_id(ruleset_id)
+            for signature in queryset:
+                ruleset.scripts.add(signature)
+            ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Added to Ruleset "
+                                 + ruleset.name + " successfully !")
+
+    def remove_ruleset(self, request, queryset):
+        ruleset_id = request.POST['ruleset']
+        if ruleset_id:
+            ruleset = RuleSetBro.get_by_id(ruleset_id)
+            for signature in queryset:
+                ruleset.scripts.remove(signature)
+            ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Removed from Ruleset "
+                                 + ruleset.name + " successfully !")
+
+    add_ruleset.short_description = 'Add ruleset'
+    remove_ruleset.short_description = 'Remove ruleset'
     RuleMixin.test.short_description = "Test Script"
     search_fields = ('rule_full',)
     list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
     list_display = ('name', 'enabled')
     action_form = RuleMixin.UpdateActionForm
     actions = [RuleMixin.make_enabled, RuleMixin.make_disabled,
-               RuleMixin.add_ruleset, RuleMixin.remove_ruleset, RuleMixin.test]
+               add_ruleset, remove_ruleset, RuleMixin.test]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -144,13 +143,35 @@ class ScriptBroAdmin(RuleMixin, admin.ModelAdmin):
 
 
 class SignatureBroAdmin(RuleMixin, admin.ModelAdmin):
+    def add_ruleset(self, request, queryset):
+        ruleset_id = request.POST['ruleset']
+        if ruleset_id:
+            ruleset = RuleSetBro.get_by_id(ruleset_id)
+            for signature in queryset:
+                ruleset.signatures.add(signature)
+            ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Added to Ruleset "
+                                 + ruleset.name + " successfully !")
+
+    def remove_ruleset(self, request, queryset):
+        ruleset_id = request.POST['ruleset']
+        if ruleset_id:
+            ruleset = RuleSetBro.get_by_id(ruleset_id)
+            for signature in queryset:
+                ruleset.signatures.remove(signature)
+            ruleset.save()
+            messages.add_message(request, messages.SUCCESS, "Removed from Ruleset "
+                                 + ruleset.name + " successfully !")
+
+    add_ruleset.short_description = 'Add ruleset'
+    remove_ruleset.short_description = 'Remove ruleset'
     RuleMixin.test.short_description = "Test Signature"
     search_fields = ('rule_full',)
     list_filter = ('enabled', 'created_date', 'updated_date', 'rulesetbro__name')
     list_display = ('msg', 'enabled')
     action_form = RuleMixin.UpdateActionForm
     actions = [RuleMixin.make_enabled, RuleMixin.make_disabled,
-               RuleMixin.add_ruleset, RuleMixin.remove_ruleset, RuleMixin.test]
+               add_ruleset, remove_ruleset, RuleMixin.test]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
