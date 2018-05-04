@@ -653,7 +653,7 @@ class CriticalStack(models.Model):
                 errors.append('deploy failed for ' + str(bro) + ': ' + str(e))
             else:
                 logger.debug("output : " + str(response))
-        if errors:
+        if errors:  # pragma: no cover
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True}
@@ -674,7 +674,7 @@ class CriticalStack(models.Model):
             else:
                 logger.debug("output : " + str(response))
                 success.append(response['2_list'])
-        if errors:
+        if errors:  # pragma: no cover
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True, 'message': str(success)}

@@ -23,6 +23,11 @@ class APITest(APITestCase):
     def tearDown(self):
         self.client.logout()
 
+    def test_conf(self):
+        response = self.client.get('/api/v1/bro/configuration/101/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
     def test_bro(self):
         response = self.client.get('/api/v1/bro/bro/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -88,6 +93,25 @@ class APITest(APITestCase):
             PeriodicTask.objects.get(name="test_deploy_rules_" + str(CrontabSchedule.objects.get(id=4)))
         with self.assertRaises(ObjectDoesNotExist):
             PeriodicTask.objects.get(name="test_check_task")
+
+        response = self.client.get('/api/v1/bro/bro/101/test_rules/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+    def test_signature(self):
+        response = self.client.get('/api/v1/bro/signature/101/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+    def test_script(self):
+        response = self.client.get('/api/v1/bro/script/102/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+    def test_ruleset(self):
+        response = self.client.get('/api/v1/bro/ruleset/101/test_rules/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
 
     def test_criticalstack(self):
         response = self.client.get('/api/v1/bro/criticalstack/')
