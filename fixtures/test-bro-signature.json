@@ -9,14 +9,14 @@
         "enabled": true,
         "created_date": "2018-04-12T18:45:20.197Z",
         "updated_date": "2018-04-12T18:45:20.197Z",
-        "file_test_success": ""
     }
 },
 {
     "model": "bro.signaturebro",
     "pk": 101,
     "fields": {
-        "msg": "Found root!"
+        "msg": "Found root!",
+        "file_test_success": ""
     }
 }
 ]
