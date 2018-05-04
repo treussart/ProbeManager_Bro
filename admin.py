@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
 
-from core.utils import generic_import_csv
+from core.views import generic_import_csv
 from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel, CriticalStack
 
