@@ -2,9 +2,7 @@ import logging
 
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.http import JsonResponse
 from rest_framework import viewsets, mixins, status
-from rest_framework.decorators import api_view
 
 from bro.api import serializers
 from bro.models import Configuration, Bro, SignatureBro, ScriptBro, RuleSetBro, Intel, CriticalStack
