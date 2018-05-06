@@ -129,7 +129,7 @@ class BroTest(TestCase):
         bro = Bro.get_by_id(101)
         response = bro.server.test()
         self.assertTrue(response)
-        response = bro.server.test_root()
+        response = bro.server.test_become()
         self.assertTrue(response)
 
     def test_running(self):

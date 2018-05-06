@@ -80,6 +80,7 @@ class SignatureBro(Rule):
     Stores a signature Bro compatible. (pattern matching), see https://www.bro.org/sphinx/frameworks/signatures.html
     """
     msg = models.CharField(max_length=1000, unique=True)
+    file_test_success = models.FileField(name='file_test_success', upload_to='file_test_success', blank=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -182,6 +183,7 @@ class ScriptBro(Rule):
     Stores a script Bro compatible. see : https://www.bro.org/sphinx/scripting/index.html#understanding-bro-scripts
     """
     name = models.CharField(max_length=100, unique=True, verbose_name="msg in notice")
+    file_test_success = models.FileField(name='file_test_success', upload_to='file_test_success', blank=True)
 
     def __str__(self):
         return self.name
@@ -277,7 +279,7 @@ class RuleSetBro(RuleSet):
                                              )
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     def test_rules(self):
         test = True
@@ -653,7 +655,7 @@ class CriticalStack(models.Model):
                 errors.append('deploy failed for ' + str(bro) + ': ' + str(e))
             else:
                 logger.debug("output : " + str(response))
-        if errors:
+        if errors:  # pragma: no cover
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True}
@@ -674,7 +676,7 @@ class CriticalStack(models.Model):
             else:
                 logger.debug("output : " + str(response))
                 success.append(response['2_list'])
-        if errors:
+        if errors:  # pragma: no cover
             return {'status': False, 'errors': str(errors)}
         else:
             return {'status': True, 'message': str(success)}

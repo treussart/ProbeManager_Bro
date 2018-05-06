@@ -1,4 +1,5 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_api --settings=probemanager.settings.dev """
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
@@ -12,7 +13,7 @@ from bro.models import Bro, CriticalStack
 class APITest(APITestCase):
     fixtures = ['init', 'crontab', 'test-core-secrets', 'test-bro-signature',
                 'test-bro-script', 'test-bro-ruleset', 'test-bro-conf',
-                'test-bro-bro']
+                'test-bro-bro', 'test-bro-critical-stack']
 
     def setUp(self):
         self.client = APIClient()
@@ -22,6 +23,11 @@ class APITest(APITestCase):
 
     def tearDown(self):
         self.client.logout()
+
+    def test_conf(self):
+        response = self.client.get('/api/v1/bro/configuration/101/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
 
     def test_bro(self):
         response = self.client.get('/api/v1/bro/bro/')
@@ -89,10 +95,69 @@ class APITest(APITestCase):
         with self.assertRaises(ObjectDoesNotExist):
             PeriodicTask.objects.get(name="test_check_task")
 
+        response = self.client.get('/api/v1/bro/bro/101/test_rules/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/start/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/stop/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/restart/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/reload/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/status/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/uptime/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['uptime'])
+
+        response = self.client.get('/api/v1/bro/bro/101/deploy_rules/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/bro/101/deploy_conf/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        # response = self.client.get('/api/v1/bro/bro/101/install/')
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertTrue(response.data['status'])
+        #
+        # response = self.client.get('/api/v1/bro/bro/101/install/?version=' + settings.BRO_VERSION)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertTrue(response.data['status'])
+
+    def test_signature(self):
+        response = self.client.get('/api/v1/bro/signature/101/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+    def test_script(self):
+        response = self.client.get('/api/v1/bro/script/102/test/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+    def test_ruleset(self):
+        response = self.client.get('/api/v1/bro/ruleset/101/test_rules/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
     def test_criticalstack(self):
         response = self.client.get('/api/v1/bro/criticalstack/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(response.data['count'], 1)
 
         data = {'api_key': '19216850111',
                 'scheduled_pull': 1,
@@ -109,7 +174,7 @@ class APITest(APITestCase):
 
         response = self.client.get('/api/v1/bro/criticalstack/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['count'], 2)
 
         response = self.client.delete('/api/v1/bro/criticalstack/' + str(criticalstack.id) + '/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -119,4 +184,13 @@ class APITest(APITestCase):
 
         response = self.client.get('/api/v1/bro/criticalstack/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(response.data['count'], 1)
+
+        response = self.client.get('/api/v1/bro/criticalstack/1/pull/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+
+        response = self.client.get('/api/v1/bro/criticalstack/1/list_feeds/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['status'])
+        self.assertIn('test', response.data['message'])
