@@ -138,7 +138,7 @@ class SignatureBro(Rule):
 
     def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
-            rule_file = tmp_dir + "signature.txt"
+            rule_file = tmp_dir + str(self.sid) + ".sig"
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
@@ -208,21 +208,29 @@ class ScriptBro(Rule):
 
     def test(self):
         with self.get_tmp_dir("test_script") as tmp_dir:
-            rule_file = tmp_dir + str(self.pk) + ".bro"
-            with open(rule_file, 'w') as f:
-                f.write(self.rule_full.replace('\r', ''))
+            value_scripts = ""
+            for script in ScriptBro.get_all():
+                if script.enabled:
+                    value_scripts += script.rule_full + '\n'
+            script_file = tmp_dir + "myscripts.bro"
+            with open(script_file, 'w', encoding='utf_8') as f:
+                f.write(value_scripts)
             cmd = [settings.BRO_BINARY,
                    '-a',
-                   rule_file,
+                   script_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             return process_cmd(cmd, tmp_dir, "error")
 
     def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
-            rule_file = tmp_dir + "script.txt"
+            value_scripts = ""
+            for script in ScriptBro.get_all():
+                if script.enabled:
+                    value_scripts += script.rule_full + '\n'
+            rule_file = tmp_dir + "myscripts.bro"
             with open(rule_file, 'w', encoding='utf_8') as f:
-                f.write(self.rule_full.replace('\r', ''))
+                f.write(value_scripts)
             cmd = [settings.BRO_BINARY,
                    '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
                    rule_file,
