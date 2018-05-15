@@ -128,7 +128,7 @@ class SignatureBro(Rule):
     def test(self):
         with self.get_tmp_dir("test_sig") as tmp_dir:
             rule_file = tmp_dir + str(self.sid) + ".sig"
-            with open(rule_file, 'w') as f:
+            with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-s', rule_file,
