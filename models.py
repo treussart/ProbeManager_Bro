@@ -21,6 +21,7 @@ from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
 from core.utils import process_cmd, create_deploy_rules_task, create_check_task
 from rules.models import RuleSet, Rule
+from .exceptions import TestRuleFailed
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +189,13 @@ class ScriptBro(Rule):
     def __str__(self):
         return self.name
 
+    def save(self, **kwargs):
+        if self.test(first=True)['status']:
+            super().save(**kwargs)
+        else:
+            print(self.test(first=True))
+            raise TestRuleFailed("Script test failed")
+
     @classmethod
     def get_by_name(cls, name):
         try:
@@ -206,12 +214,14 @@ class ScriptBro(Rule):
     def extract_attributs(cls, file, rulesets=None):  # TODO Not yet implemented # pragma: no cover
         pass
 
-    def test(self):
+    def test(self, first=False):
         with self.get_tmp_dir("test_script") as tmp_dir:
             value_scripts = ""
             for script in ScriptBro.get_all():
                 if script.enabled:
-                    value_scripts += script.rule_full + '\n'
+                    value_scripts += script.rule_full.replace('\r', '') + '\n'
+            if first:
+                value_scripts += self.rule_full.replace('\r', '') + '\n'
             script_file = tmp_dir + "myscripts.bro"
             with open(script_file, 'w', encoding='utf_8') as f:
                 f.write(value_scripts)
@@ -222,12 +232,14 @@ class ScriptBro(Rule):
                    ]
             return process_cmd(cmd, tmp_dir, "error")
 
-    def test_pcap(self):
+    def test_pcap(self, first=False):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
             value_scripts = ""
             for script in ScriptBro.get_all():
                 if script.enabled:
-                    value_scripts += script.rule_full + '\n'
+                    value_scripts += script.rule_full.replace('\r', '') + '\n'
+            if first:
+                value_scripts += self.rule_full.replace('\r', '') + '\n'
             rule_file = tmp_dir + "myscripts.bro"
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(value_scripts)
@@ -251,15 +263,15 @@ class ScriptBro(Rule):
         errdata += b"Alert not generated"
         return {'status': False, 'errors': errdata}
 
-    def test_all(self):
+    def test_all(self, first=False):
         test = True
         errors = list()
-        response = self.test()
+        response = self.test(first=first)
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
         if self.file_test_success:
-            response_pcap = self.test_pcap()
+            response_pcap = self.test_pcap(first=first)
             if not response_pcap['status']:
                 test = False
                 errors.append(str(self) + " : " + str(response_pcap['errors']))
@@ -302,6 +314,7 @@ class RuleSetBro(RuleSet):
             if not response['status']:
                 test = False
                 errors.append(str(script) + " : " + str(response['errors']))
+            break  # One test is good (you import all script in one time).
         if not test:
             return {'status': False, 'errors': str(errors)}
         return {'status': True}
@@ -480,6 +493,7 @@ class Bro(Probe):
                 if not response['status']:
                     test = False
                     errors.append(str(script) + " : " + str(response['errors']))
+                break  # One test is good (you import all script in one time).
         if test:
             return {'status': True}
         else:

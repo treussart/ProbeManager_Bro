@@ -74,13 +74,14 @@ class ScriptBroTest(TestCase):
         self.assertEqual(script_bro, None)
         self.assertEqual(ScriptBro.get_by_name("101"), None)
         with self.assertRaises(IntegrityError):
-            ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
-                                     rev=0,
-                                     reference="",
-                                     rule_full="test",
-                                     enabled=True,
-                                     created_date=self.date_now
-                                     )
+            with open(settings.BASE_DIR + '/bro/tests/data/test-script-match.bro', encoding='utf_8') as f:
+                ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
+                                         rev=0,
+                                         reference="",
+                                         rule_full=f.read(),
+                                         enabled=True,
+                                         created_date=self.date_now
+                                         )
 
 
 class SignatureBroTest(TestCase):

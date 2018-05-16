@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.admin.helpers import ActionForm
 
 from core.views import generic_import_csv
+from .exceptions import TestRuleFailed
 from .forms import BroChangeForm
 from .models import Bro, SignatureBro, ScriptBro, RuleSetBro, Configuration, Intel, CriticalStack
 
@@ -134,12 +135,17 @@ class ScriptBroAdmin(RuleMixin, admin.ModelAdmin):
                add_ruleset, remove_ruleset, RuleMixin.test]
 
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        response = obj.test_all()
-        if response['status']:
-            messages.add_message(request, messages.SUCCESS, "Test script OK")
+        try:
+            super().save_model(request, obj, form, change)
+        except TestRuleFailed:
+            messages.set_level(request, messages.ERROR)
+            messages.add_message(request, messages.ERROR, "Test script failed ! Script not saved")
         else:
-            messages.add_message(request, messages.ERROR, "Test script failed ! " + str(response['errors']))
+            response = obj.test_all()
+            if response['status']:
+                messages.add_message(request, messages.SUCCESS, "Test script OK")
+            else:
+                messages.add_message(request, messages.ERROR, "Test script failed ! " + str(response['errors']))
 
 
 class SignatureBroAdmin(RuleMixin, admin.ModelAdmin):
