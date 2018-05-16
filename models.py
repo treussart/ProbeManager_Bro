@@ -267,7 +267,7 @@ class ScriptBro(Rule):
         test = True
         errors = list()
         response = self.test()
-        if not response['status']:
+        if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
         if self.file_test_success:
@@ -311,7 +311,7 @@ class RuleSetBro(RuleSet):
                 errors.append(str(signature) + " : " + str(response['errors']))
         for script in self.scripts.all():
             response = script.test()
-            if not response['status']:
+            if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
                 test = False
                 errors.append(str(script) + " : " + str(response['errors']))
             break  # One test is good (you import all script in one time).
@@ -490,7 +490,7 @@ class Bro(Probe):
                     errors.append(str(response['errors']))
             for script in ruleset.scripts.all():
                 response = script.test()
-                if not response['status']:
+                if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
                     test = False
                     errors.append(str(script) + " : " + str(response['errors']))
                 break  # One test is good (you import all script in one time).
