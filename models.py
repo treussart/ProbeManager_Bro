@@ -193,7 +193,7 @@ class ScriptBro(Rule):
         if self.test(first=True)['status']:
             super().save(**kwargs)
         else:
-            print(self.test(first=True))
+            logger.debug(self.test(first=True))
             raise TestRuleFailed("Script test failed")
 
     @classmethod
