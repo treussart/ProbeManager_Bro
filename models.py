@@ -190,10 +190,10 @@ class ScriptBro(Rule):
         return self.name
 
     def save(self, **kwargs):
-        if self.test(first=True)['status']:
+        if self.test()['status']:
             super().save(**kwargs)
         else:
-            logger.debug(self.test(first=True))
+            logger.debug(self.test())
             raise TestRuleFailed("Script test failed")
 
     @classmethod
@@ -214,13 +214,13 @@ class ScriptBro(Rule):
     def extract_attributs(cls, file, rulesets=None):  # TODO Not yet implemented # pragma: no cover
         pass
 
-    def test(self, first=False):
+    def test(self):
         with self.get_tmp_dir("test_script") as tmp_dir:
             value_scripts = ""
             for script in ScriptBro.get_all():
                 if script.enabled:
                     value_scripts += script.rule_full.replace('\r', '') + '\n'
-            if first:
+            if self.rule_full.replace('\r', '') not in value_scripts:
                 value_scripts += self.rule_full.replace('\r', '') + '\n'
             script_file = tmp_dir + "myscripts.bro"
             with open(script_file, 'w', encoding='utf_8') as f:
@@ -232,13 +232,13 @@ class ScriptBro(Rule):
                    ]
             return process_cmd(cmd, tmp_dir, "error")
 
-    def test_pcap(self, first=False):
+    def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
             value_scripts = ""
             for script in ScriptBro.get_all():
                 if script.enabled:
                     value_scripts += script.rule_full.replace('\r', '') + '\n'
-            if first:
+            if self.rule_full.replace('\r', '') not in value_scripts:
                 value_scripts += self.rule_full.replace('\r', '') + '\n'
             rule_file = tmp_dir + "myscripts.bro"
             with open(rule_file, 'w', encoding='utf_8') as f:
@@ -263,15 +263,15 @@ class ScriptBro(Rule):
         errdata += b"Alert not generated"
         return {'status': False, 'errors': errdata}
 
-    def test_all(self, first=False):
+    def test_all(self):
         test = True
         errors = list()
-        response = self.test(first=first)
+        response = self.test()
         if not response['status']:
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
         if self.file_test_success:
-            response_pcap = self.test_pcap(first=first)
+            response_pcap = self.test_pcap()
             if not response_pcap['status']:
                 test = False
                 errors.append(str(self) + " : " + str(response_pcap['errors']))
