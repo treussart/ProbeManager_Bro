@@ -233,35 +233,38 @@ class ScriptBro(Rule):
             return process_cmd(cmd, tmp_dir, "error")
 
     def test_pcap(self):
-        with self.get_tmp_dir("test_pcap") as tmp_dir:
-            value_scripts = ""
-            for script in ScriptBro.get_all():
-                if script.enabled:
-                    value_scripts += script.rule_full.replace('\r', '') + '\n'
-            if self.rule_full.replace('\r', '') not in value_scripts:
-                value_scripts += self.rule_full.replace('\r', '') + '\n'
-            rule_file = tmp_dir + "myscripts.bro"
-            with open(rule_file, 'w', encoding='utf_8') as f:
-                f.write(value_scripts)
-            cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
-                   rule_file,
-                   '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
-                   ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            outdata, errdata = process.communicate()
-            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
-            test = False
-            if os.path.isfile(tmp_dir + "notice.log"):
-                with open(tmp_dir + "notice.log", "r", encoding='utf_8') as f:
-                    if self.name in f.read():
-                        test = True
-            # if success ok
-        if process.returncode == 0 and test:
+        if self.file_test_success:
+            with self.get_tmp_dir("test_pcap") as tmp_dir:
+                value_scripts = ""
+                for script in ScriptBro.get_all():
+                    if script.enabled:
+                        value_scripts += script.rule_full.replace('\r', '') + '\n'
+                if self.rule_full.replace('\r', '') not in value_scripts:
+                    value_scripts += self.rule_full.replace('\r', '') + '\n'
+                rule_file = tmp_dir + "myscripts.bro"
+                with open(rule_file, 'w', encoding='utf_8') as f:
+                    f.write(value_scripts)
+                cmd = [settings.BRO_BINARY,
+                       '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
+                       rule_file,
+                       '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
+                       ]
+                process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                outdata, errdata = process.communicate()
+                logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
+                test = False
+                if os.path.isfile(tmp_dir + "notice.log"):
+                    with open(tmp_dir + "notice.log", "r", encoding='utf_8') as f:
+                        if self.name in f.read():
+                            test = True
+                # if success ok
+            if process.returncode == 0 and test:
+                return {'status': True}
+                # if not -> return error
+            errdata += b"Alert not generated"
+            return {'status': False, 'errors': errdata}
+        else:
             return {'status': True}
-            # if not -> return error
-        errdata += b"Alert not generated"
-        return {'status': False, 'errors': errdata}
 
     def test_all(self):
         test = True
