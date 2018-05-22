@@ -58,13 +58,11 @@ elif [ -f /etc/debian_version ]; then
                 sudo chown "$SERVER_USER":"$CURRENT_USER" $( which bro )
                 sudo chown -R "$SERVER_USER":"$CURRENT_USER" /usr/local/bro
                 sudo chown -R "$SERVER_USER":"$CURRENT_USER" /etc/bro
-                sudo chmod -R 770 /etc/bro
                 sudo chmod -R 770 /usr/local/bro
                 sudo chmod 750 $( which bro )
         else
                 sudo chown "$CURRENT_USER" $( which bro )
                 sudo chown -R "$CURRENT_USER" /usr/local/bro
-                sudo chown -R "$CURRENT_USER" /etc/bro
         fi
         config="/usr/local/bro/etc/"
         rules="/etc/bro/"
