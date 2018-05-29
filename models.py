@@ -21,6 +21,7 @@ from core.modelsmixins import CommonMixin
 from core.ssh import execute, execute_copy
 from core.utils import process_cmd, create_deploy_rules_task, create_check_task
 from rules.models import RuleSet, Rule
+from .exceptions import TestRuleFailed
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ class SignatureBro(Rule):
     def test(self):
         with self.get_tmp_dir("test_sig") as tmp_dir:
             rule_file = tmp_dir + str(self.sid) + ".sig"
-            with open(rule_file, 'w') as f:
+            with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
                    '-s', rule_file,
@@ -138,7 +139,7 @@ class SignatureBro(Rule):
 
     def test_pcap(self):
         with self.get_tmp_dir("test_pcap") as tmp_dir:
-            rule_file = tmp_dir + "signature.txt"
+            rule_file = tmp_dir + str(self.sid) + ".sig"
             with open(rule_file, 'w', encoding='utf_8') as f:
                 f.write(self.rule_full.replace('\r', ''))
             cmd = [settings.BRO_BINARY,
@@ -188,6 +189,13 @@ class ScriptBro(Rule):
     def __str__(self):
         return self.name
 
+    def save(self, **kwargs):
+        if self.test()['status']:
+            super().save(**kwargs)
+        else:
+            logger.debug(self.test())
+            raise TestRuleFailed("Script test failed")
+
     @classmethod
     def get_by_name(cls, name):
         try:
@@ -208,46 +216,61 @@ class ScriptBro(Rule):
 
     def test(self):
         with self.get_tmp_dir("test_script") as tmp_dir:
-            rule_file = tmp_dir + str(self.pk) + ".bro"
-            with open(rule_file, 'w') as f:
-                f.write(self.rule_full.replace('\r', ''))
+            value_scripts = ""
+            for script in ScriptBro.get_all():
+                if script.enabled:
+                    value_scripts += script.rule_full.replace('\r', '') + '\n'
+            if self.rule_full.replace('\r', '') not in value_scripts:
+                value_scripts += self.rule_full.replace('\r', '') + '\n'
+            script_file = tmp_dir + "myscripts.bro"
+            with open(script_file, 'w', encoding='utf_8') as f:
+                f.write(value_scripts)
             cmd = [settings.BRO_BINARY,
                    '-a',
-                   rule_file,
+                   script_file,
                    '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
                    ]
             return process_cmd(cmd, tmp_dir, "error")
 
     def test_pcap(self):
-        with self.get_tmp_dir("test_pcap") as tmp_dir:
-            rule_file = tmp_dir + "script.txt"
-            with open(rule_file, 'w', encoding='utf_8') as f:
-                f.write(self.rule_full.replace('\r', ''))
-            cmd = [settings.BRO_BINARY,
-                   '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
-                   rule_file,
-                   '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
-                   ]
-            process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            outdata, errdata = process.communicate()
-            logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
-            test = False
-            if os.path.isfile(tmp_dir + "notice.log"):
-                with open(tmp_dir + "notice.log", "r", encoding='utf_8') as f:
-                    if self.name in f.read():
-                        test = True
-            # if success ok
-        if process.returncode == 0 and test:
+        if self.file_test_success:
+            with self.get_tmp_dir("test_pcap") as tmp_dir:
+                value_scripts = ""
+                for script in ScriptBro.get_all():
+                    if script.enabled:
+                        value_scripts += script.rule_full.replace('\r', '') + '\n'
+                if self.rule_full.replace('\r', '') not in value_scripts:
+                    value_scripts += self.rule_full.replace('\r', '') + '\n'
+                rule_file = tmp_dir + "myscripts.bro"
+                with open(rule_file, 'w', encoding='utf_8') as f:
+                    f.write(value_scripts)
+                cmd = [settings.BRO_BINARY,
+                       '-r', settings.BASE_DIR + "/" + self.file_test_success.name,
+                       rule_file,
+                       '-p', 'standalone', '-p', 'local', '-p', 'bro local.bro broctl broctl/standalone broctl/auto'
+                       ]
+                process = subprocess.Popen(cmd, cwd=tmp_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                outdata, errdata = process.communicate()
+                logger.debug("outdata : " + str(outdata), "errdata : " + str(errdata))
+                test = False
+                if os.path.isfile(tmp_dir + "notice.log"):
+                    with open(tmp_dir + "notice.log", "r", encoding='utf_8') as f:
+                        if self.name in f.read():
+                            test = True
+                # if success ok
+            if process.returncode == 0 and test:
+                return {'status': True}
+                # if not -> return error
+            errdata += b"Alert not generated"
+            return {'status': False, 'errors': errdata}
+        else:
             return {'status': True}
-            # if not -> return error
-        errdata += b"Alert not generated"
-        return {'status': False, 'errors': errdata}
 
     def test_all(self):
         test = True
         errors = list()
         response = self.test()
-        if not response['status']:
+        if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
             test = False
             errors.append(str(self) + " : " + str(response['errors']))
         if self.file_test_success:
@@ -291,9 +314,10 @@ class RuleSetBro(RuleSet):
                 errors.append(str(signature) + " : " + str(response['errors']))
         for script in self.scripts.all():
             response = script.test()
-            if not response['status']:
+            if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
                 test = False
                 errors.append(str(script) + " : " + str(response['errors']))
+            break  # One test is good (you import all script in one time).
         if not test:
             return {'status': False, 'errors': str(errors)}
         return {'status': True}
@@ -314,9 +338,13 @@ class Bro(Probe):
         return self.name + " : " + self.description
 
     def save(self, **kwargs):
+        update = False
+        if self.id:
+            update = True
         super().save(**kwargs)
-        create_deploy_rules_task(self)
-        create_check_task(self)
+        if not update:
+            create_deploy_rules_task(self)
+            create_check_task(self)
 
     def delete(self, **kwargs):
         try:
@@ -469,9 +497,10 @@ class Bro(Probe):
                     errors.append(str(response['errors']))
             for script in ruleset.scripts.all():
                 response = script.test()
-                if not response['status']:
+                if not response['status']:  # pragma: no cover (Normally no script failed, it's not saved)
                     test = False
                     errors.append(str(script) + " : " + str(response['errors']))
+                break  # One test is good (you import all script in one time).
         if test:
             return {'status': True}
         else:

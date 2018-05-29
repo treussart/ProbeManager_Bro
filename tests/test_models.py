@@ -67,20 +67,35 @@ class ScriptBroTest(TestCase):
         self.assertEqual(script_bro.rev, 0)
         self.assertEqual(script_bro.reference, None)
         self.assertTrue(script_bro.enabled)
+        self.assertTrue(script_bro.test()['status'])
+        self.assertTrue(script_bro.test_pcap()['status'])
         script_bros = ScriptBro.find("FTP brute-forcing detector")
         self.assertEqual(script_bros[0].name, "The hash value of a file transferred over HTTP matched")
         self.assertEqual(str(script_bro), "The hash value of a file transferred over HTTP matched")
         script_bro = ScriptBro.get_by_id(199)
         self.assertEqual(script_bro, None)
         self.assertEqual(ScriptBro.get_by_name("101"), None)
+        with open(settings.BASE_DIR + '/bro/tests/data/test-script-notmatch.bro', encoding='utf_8') as f:
+            with open(settings.BASE_DIR + '/bro/tests/data/test-script.pcap', 'rb') as p:
+                script_bro = ScriptBro.objects.create(name="Heartbeat message smaller than minimum required length.",
+                                                      rev=0,
+                                                      reference="",
+                                                      rule_full=f.read(),
+                                                      enabled=True,
+                                                      created_date=self.date_now,
+                                                      file_test_success=settings.BASE_DIR + '/bro/tests/data/test-script.pcap'
+                                                      )
+        self.assertTrue(script_bro.test()['status'])
+        self.assertFalse(script_bro.test_pcap()['status'])
         with self.assertRaises(IntegrityError):
-            ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
-                                     rev=0,
-                                     reference="",
-                                     rule_full="test",
-                                     enabled=True,
-                                     created_date=self.date_now
-                                     )
+            with open(settings.BASE_DIR + '/bro/tests/data/test-script-notmatch.bro', encoding='utf_8') as f:
+                ScriptBro.objects.create(name="The hash value of a file transferred over HTTP matched",
+                                         rev=0,
+                                         reference="",
+                                         rule_full=f.read(),
+                                         enabled=True,
+                                         created_date=self.date_now
+                                         )
 
 
 class SignatureBroTest(TestCase):
@@ -104,6 +119,14 @@ class SignatureBroTest(TestCase):
         signature_bro = SignatureBro.get_by_id(199)
         self.assertEqual(signature_bro, None)
         self.assertEqual(SignatureBro.get_by_msg("101"), None)
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                SignatureBro.objects.create(msg="Found root!",
+                                            reference="",
+                                            rule_full="test",
+                                            enabled=True,
+                                            created_date=self.date_now
+                                            )
 
 
 class BroTest(TestCase):
@@ -170,14 +193,18 @@ class BroTest(TestCase):
         bro = Bro.get_by_id(101)
         response = bro.test_rules()
         self.assertTrue(response['status'])
-        with transaction.atomic():
-            with self.assertRaises(IntegrityError):
-                SignatureBro.objects.create(msg="Found root!",
-                                            reference="",
-                                            rule_full="test",
-                                            enabled=True,
-                                            created_date=self.date_now
-                                            )
+        signature = SignatureBro.objects.create(msg="zezezezezeze!",
+                                    reference="",
+                                    rule_full="test",
+                                    enabled=True,
+                                    created_date=self.date_now
+                                    )
+        ruleset = RuleSetBro(name="test failed")
+        ruleset.save()
+        ruleset.signatures.add(signature)
+        bro.rulesets.add(ruleset)
+        response = bro.test_rules()
+        self.assertFalse(response['status'])
 
 
 class IntelTest(TestCase):
