@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
-from bro.models import Bro, CriticalStack
+from bro.models import Bro, CriticalStack, ScriptBro
 
 
 class APITest(APITestCase):
@@ -157,8 +157,12 @@ class APITest(APITestCase):
                 'rev': '1',
                 'rule_full': str(s.read().replace('\r', '')),
                 'name': 'failed logins',
+                'enabled': True
             })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # response = self.client.get('/api/v1/bro/script/' + str(ScriptBro.get_by_name('failed logins').id) + '/test/')
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertTrue(response.data['status'])
         response = self.client.post('/api/v1/bro/script/', {
             "rev": 0,
             "reference": "string",
@@ -167,15 +171,22 @@ class APITest(APITestCase):
             "name": "string",
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        response = self.client.put('/api/v1/bro/script/102/', {
-            "name": "string",
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response = self.client.patch('/api/v1/bro/script/102/', {
-            "name": "string",
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # print(ScriptBro.get_by_name('failed logins'))
+        # with open(settings.BASE_DIR + '/bro/tests/data/test-script-match.bro', encoding='UTF_8') as s:
+        #     response = self.client.put('/api/v1/bro/script/102/', {
+        #         'rev': '0',
+        #         'rule_full': str(s.read().replace('\r', '')),
+        #         'name': 'Heartbeat message smaller than minimum required length',
+        #     })
+        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # response = self.client.put('/api/v1/bro/script/102/', {
+        #     "rev": 1
+        # })
+        # self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # response = self.client.patch('/api/v1/bro/script/102/', {
+        #     "rev": 1
+        # })
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_ruleset(self):
         response = self.client.get('/api/v1/bro/ruleset/101/test_rules/')

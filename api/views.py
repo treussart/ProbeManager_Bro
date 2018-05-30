@@ -129,7 +129,6 @@ class ScriptBroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
         try:
             ScriptBro.objects.create(**request.data)
         except Exception:
-            logger.exception("Error in create by API")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_201_CREATED)
 
