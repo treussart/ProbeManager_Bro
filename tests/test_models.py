@@ -189,6 +189,14 @@ class BroTest(TestCase):
         response = bro.update()
         self.assertTrue(response['status'])
 
+    def test_status(self):
+        bro = Bro.get_by_id(101)
+        self.assertTrue(bro.status())
+        self.assertIn("standalone localhost", bro.status())
+        bro.installed = False
+        bro.save()
+        self.assertEqual('Not installed', bro.status())
+
     def test_test_rules(self):
         bro = Bro.get_by_id(101)
         response = bro.test_rules()

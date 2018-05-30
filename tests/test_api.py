@@ -1,5 +1,6 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_api --settings=probemanager.settings.dev """
 from django.conf import settings
+from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
@@ -72,6 +73,9 @@ class APITest(APITestCase):
         self.assertFalse(Bro.get_by_name('test').installed)
 
         response = self.client.put('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', {'name': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', {'configuration': 'test'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', data_patch)
@@ -148,6 +152,30 @@ class APITest(APITestCase):
         response = self.client.get('/api/v1/bro/script/102/test/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['status'])
+        with open(settings.BASE_DIR + '/bro/tests/data/test-script-match.bro', encoding='UTF_8') as s:
+            response = self.client.post('/api/v1/bro/script/', {
+                'rev': '1',
+                'rule_full': str(s.read().replace('\r', '')),
+                'name': 'failed logins',
+            })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post('/api/v1/bro/script/', {
+            "rev": 0,
+            "reference": "string",
+            "rule_full": "string",
+            "enabled": True,
+            "name": "string",
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.put('/api/v1/bro/script/102/', {
+            "name": "string",
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch('/api/v1/bro/script/102/', {
+            "name": "string",
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_ruleset(self):
         response = self.client.get('/api/v1/bro/ruleset/101/test_rules/')
