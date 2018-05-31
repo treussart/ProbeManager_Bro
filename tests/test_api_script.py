@@ -57,11 +57,21 @@ class APITestScript(APITestCase):
             "rev": 1
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.put('/api/v1/bro/script/102/', {
+            'rev': '0',
+            'rule_full': "Pouete pouet prout",
+            'name': 'Failed',
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = self.client.patch('/api/v1/bro/script/102/', {
             "rev": 1
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.patch('/api/v1/bro/script/102/', {
             "rev": "test"
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch('/api/v1/bro/script/102/', {
+            "rule_full": "test pouet pouet prout t"
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
