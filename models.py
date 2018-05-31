@@ -444,10 +444,7 @@ class Bro(Probe):
                 logger.exception('Failed to get status')
                 return 'Failed to get status'
             logger.debug("output : " + str(response))
-            if response['status'] == "OK":
-                return ""
-            else:
-                return response['status']
+            return response['status']
         else:
             return 'Not installed'
 

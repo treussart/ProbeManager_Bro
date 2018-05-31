@@ -99,7 +99,7 @@ class BroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Destro
         return Response(response)
 
     @action(detail=True)
-    def install(self, request, pk=None):
+    def install(self, request, pk=None):  # pragma: no cover
         obj = self.get_object()
         try:
             version = request.query_params['version']
@@ -120,34 +120,37 @@ class SignatureBroViewSet(viewsets.ModelViewSet):
         return Response(response)
 
 
-class ScriptBroViewSet(viewsets.ModelViewSet):
+class ScriptBroViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
+                       viewsets.GenericViewSet):
     queryset = ScriptBro.objects.all()
     serializer_class = serializers.ScriptBroSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            ScriptBro.objects.create(**request.data)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        try:
+            script = self.get_object()
+            serializer = serializers.ScriptBroSerializer(script, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except TestRuleFailed:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, *args, **kwargs):
+    def partial_update(self, request, pk=None):
         try:
-            partial = kwargs.pop('partial', False)
-            instance = self.get_object()
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-
-            if getattr(instance, '_prefetched_objects_cache', None):
-                # If 'prefetch_related' has been applied to a queryset, we need to
-                # forcibly invalidate the prefetch cache on the instance.
-                instance._prefetched_objects_cache = {}
-
-            return Response(serializer.data)
+            script = self.get_object()
+            serializer = serializers.ScriptBroSerializer(script, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except TestRuleFailed:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 

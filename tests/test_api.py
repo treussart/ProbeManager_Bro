@@ -1,5 +1,4 @@
 """ venv/bin/python probemanager/manage.py test bro.tests.test_api --settings=probemanager.settings.dev """
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
@@ -74,6 +73,9 @@ class APITest(APITestCase):
         response = self.client.put('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', {'name': 'test'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', {'configuration': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         response = self.client.patch('/api/v1/bro/bro/' + str(Bro.get_by_name('test').id) + '/', data_patch)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Bro.get_by_name('test').installed)
@@ -141,11 +143,6 @@ class APITest(APITestCase):
 
     def test_signature(self):
         response = self.client.get('/api/v1/bro/signature/101/test/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['status'])
-
-    def test_script(self):
-        response = self.client.get('/api/v1/bro/script/102/test/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['status'])
 
