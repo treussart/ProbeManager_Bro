@@ -83,6 +83,10 @@ class SignatureBro(Rule):
     msg = models.CharField(max_length=1000, unique=True)
     file_test_success = models.FileField(name='file_test_success', upload_to='file_test_success', blank=True)
 
+    class Meta:
+        verbose_name = 'Signature'
+        verbose_name_plural = 'Signatures'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sid = self.id
@@ -185,6 +189,10 @@ class ScriptBro(Rule):
     """
     name = models.CharField(max_length=100, unique=True, verbose_name="msg in notice")
     file_test_success = models.FileField(name='file_test_success', upload_to='file_test_success', blank=True)
+
+    class Meta:
+        verbose_name = 'Script'
+        verbose_name_plural = 'Scripts'
 
     def __str__(self):
         return self.name
@@ -301,6 +309,10 @@ class RuleSetBro(RuleSet):
                                              js_options={'quiet_millis': 200}
                                              )
 
+    class Meta:
+        verbose_name = 'Ruleset'
+        verbose_name_plural = 'Rulesets'
+
     def __str__(self):
         return str(self.name)
 
@@ -329,6 +341,10 @@ class Bro(Probe):
     """
     rulesets = models.ManyToManyField(RuleSetBro, blank=True)
     configuration = models.ForeignKey(Configuration, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Bro instance'
+        verbose_name_plural = 'Bro instances'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -662,6 +678,10 @@ class CriticalStack(models.Model):
     scheduled_pull = models.ForeignKey(CrontabSchedule, related_name='crontabschedule_pull', blank=False,
                                        null=False, on_delete=models.CASCADE)
     bros = models.ManyToManyField(Bro)
+
+    class Meta:
+        verbose_name = 'CriticalStack'
+        verbose_name_plural = 'CriticalStack'
 
     def __str__(self):
         return str(hashlib.md5(str(self.api_key).encode(encoding='UTF-8')).hexdigest())
