@@ -46,7 +46,7 @@ class ViewsCriticalStackAdminTest(TestCase):
             },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Critical stack with this Api key already exists.', str(response.content))
+        self.assertIn('CriticalStack with this Api key already exists.', str(response.content))
         self.assertEqual(len(CriticalStack.objects.all()), 2)
 
         response = self.client.get('/admin/bro/criticalstack/2/delete/',
