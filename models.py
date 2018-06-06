@@ -554,6 +554,8 @@ class Bro(Probe):
                 deploy = False
                 errors.append(str(e))
             logger.debug("output : " + str(response))
+        # Deploy intels
+        Intel.deploy(self)
         result = self.reload()
         if deploy and result['status']:
             self.rules_updated_date = timezone.now()
