@@ -102,6 +102,8 @@ Allows you to add a `Bro Intel <https://www.bro.org/sphinx-git/frameworks/intel.
 * meta.desc: A freeform description for the data.
 * meta.url: A URL for more information about the data.
 
+Intels are deployed at each deployment of the rules by a Bro instance.
+
 
 Page to add a Critical Stack client on a Bro instance :
 -------------------------------------------------------
