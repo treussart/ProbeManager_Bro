@@ -102,6 +102,8 @@ Allows you to add a `Bro Intel <https://www.bro.org/sphinx-git/frameworks/intel.
 * meta.desc: A freeform description for the data.
 * meta.url: A URL for more information about the data.
 
+Intels are deployed at each deployment of the rules by a Bro instance.
+
 
 Page to add a Critical Stack client on a Bro instance :
 -------------------------------------------------------
@@ -133,4 +135,6 @@ Miscellaneous
 -------------
 
 The problem with Bro scripts is that they are not necessarily independent of each other, which is why it's complicated to test them.
-TODO : To solve this problem, it will be necessary to test all the scripts of an instance at the same time.
+To solve this problem, it necessary to test all the scripts of an instance at the same time.
+
+Warning: Bro default scripts are not in database.
